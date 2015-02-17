@@ -131,7 +131,6 @@ int main() {
 	cout << float(fa) << endl;
 
 
-
 	cout << "End!" << endl;
 
 	return 0;

@@ -34,6 +34,7 @@
 			<< std::dec << std::noshowbase << std::endl; \
 	}while(0)
 
+
 ///////////////////////////////////////////////////////////////////////////////
 
 namespace fix_acc {
@@ -99,17 +100,20 @@ namespace fix_acc {
 		////////////////////////////////
 	public:
 		fix_acc_float() {
-			a[0] = 1L << 23;
-			a[1] = 0;
-			a[2] = 0;
-			a[3] = 0;
-			a[4] = 0;
-			/*a[3] = ~0L;
-			a[4] = 0b1111111111111111111111;*/
+			a[0] = 1;
+			a[1] = 2;
+			a[2] = 3;
+			a[3] = 0; a[4] = 0b1000000000000000000000; // 1.70141e+38
+			//a[3] = ~0L; a[4] = 0b1111111111111111111111; // Inf
+			//a[3] = 0; a[4] = 1;
+
+			a[3] = 3L << 62;
+			a[4] = 0b1111111111111111111111; // __FLT_MAX__
 		}
 
 		explicit operator float() const {
 #if __x86_64__
+#if 0
 			uint32_t result = 0;
 			if(a[4] < 0){
 				// Negative number.
@@ -196,7 +200,54 @@ namespace fix_acc {
 			float_union fu;
 			fu.bits = result;
 			return fu.f;
+#else
+			if(a[4] < 0){
+				// Negative number.
+				// TODO Implement.
+				return 0;
+			}else{
+				// Non-negative number.
 
+				// -23-127-31 = -181
+				uint64_t u;
+				int8_t exp_corr;
+				asm(
+						"	mov   $63, %%cl          \n"// 63 to cl for later.
+						"	bsr   %6, %%rbx          \n"// %6 is a[4]
+						"	jz    a3_bsr             \n"
+						"	cmp   $22, %%bl          \n"
+						"	jae   inf                \n"
+						"	sub   %%bl, %%cl         \n"// shift = 63 - pos.
+						"	mov   %6, %0             \n"// Doing all in u var.
+						"	shld  %%cl, %5, %0       \n"
+						"	add   $(4*64-181), %%bl  \n"// Exponent correction.
+						"	jmp   end                \n"
+						"a3_bsr:                     \n"
+						// TODO Implement.
+						"	jmp   end                \n"
+						"inf:                        \n"// Handle overflow.
+						"	mov   $0x7f800000, %0    \n"// Positive infinity.
+						"	jmp   end                \n"
+						"zero:                       \n"// Handle zero.
+						//"	xor   %0, %0             \n"
+						"end:                        \n"
+						: "=r"(u), "=b"(exp_corr)
+						: "r"(a[0]), "r"(a[1]), "r"(a[2]), "r"(a[3]), "r"(a[4])
+						: "0", "%rbx", "%rcx", "cc"
+				);
+
+				using namespace detail;
+				float_union fu;
+				DEBUG_HEX(u);
+				fu.f = u >> 32;
+				DEBUG_HEX(fu.fields.mantisa);
+				DEBUG(fu.fields.exponent);
+				fu.fields.exponent += exp_corr;
+				DEBUG(uint32_t(exp_corr));
+				DEBUG(fu.fields.exponent);
+				return fu.f;
+			}
+#endif
 #else
 			// TODO Implement.
 #error "Not implemented."
