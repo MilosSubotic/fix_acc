@@ -3,7 +3,7 @@
 
 CXX=clang++
 
-SOURCES := fix_acc_test.cpp
+SOURCES := fix_acc_test.cpp main.cpp
 
 CXXFLAGS += -std=c++11 -g -O3
 
@@ -34,7 +34,7 @@ ci:
 .PHONY: dis
 dis: fix_acc_test.S
 
-fix_acc_test.S: fix_acc_test.elf
+fix_acc_test.S: fix_acc_test.o
 	objdump -dS $< > $@ 
 
 ########################################

@@ -277,7 +277,7 @@ namespace fix_acc {
 		////////////////////////////////
 	};
 
-	std::ostream& operator<<(std::ostream& os, const fix_acc_float& n) {
+	inline std::ostream& operator<<(std::ostream& os, const fix_acc_float& n) {
 		if(os.flags() & std::ios::hex){
 			if(os.flags() & std::ios::showbase){
 				os.put('0').put('x');

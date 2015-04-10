@@ -5,17 +5,20 @@
  * @author Milos Subotic <milos.subotic.sm@gmail.com>
  * @license MIT
  *
- * @brief
+ * @brief Test for fix_acc.
  *
- * @version 1.0
+ * @version 2.0
  * Changelog:
  * 1.0 - Initial version.
+ * 2.0 - No main() in this file.
  *
  */
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "fix_acc.h"
+#include "fix_acc_test.h"
+
+#include <cassert>
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -94,7 +97,7 @@ std::ostream& operator<<(std::ostream& os, const int128_t& n) {
 }
 
 
-int main() {
+void test0() {
 
 	using namespace std;
 	using namespace fix_acc;
@@ -125,18 +128,57 @@ int main() {
 
 		cout << hex << fa << dec << endl;
 	}
-#endif
 
 	fix_acc_float fa;
 	cout << float(fa) << endl;
 
-
-	cout << "End!" << endl;
-
-	return 0;
-
+#endif
 
 }
 
+uint128_t test1(uint128_t acc, uint64_t mantisa, uint8_t shift) {
+
+	using namespace std;
+	using namespace fix_acc;
+	shift &= 0xf;
+
+	uint128_t mantisa128 = mantisa;
+	mantisa128 <<= shift;
+	acc += mantisa128;
+	return acc;
+}
+
+void test2(
+		uint64_t x0,
+		uint64_t x1,
+		uint64_t x2,
+		uint64_t y0,
+		uint64_t y1,
+		uint64_t y2,
+		uint64_t& z0,
+		uint64_t& z1,
+		uint64_t& z2) {
+	uint64_t r0 = x0 + y0;
+	uint64_t r1 = x1 + y1 + (x0 > r0);
+	uint64_t r2 = x2 + y2 + (x1 > r1);
+
+	z0 = r0;
+	z1 = r1;
+	z2 = r2;
+}
+
+void fix_acc_test(){
+	auto u128 = test1(1, 0xf000000000000000L, 3);
+	printf(
+			"0x%016lx%16lx\n",
+			uint64_t(u128 >> 64),
+			uint64_t(u128 & 0xffffffffffffffffL));
+
+
+	uint64_t z0;
+	uint64_t z1;
+	uint64_t z2;
+	test2(1, 2, 3, 4, 5, 6, z0, z1, z2);
+}
 
 ///////////////////////////////////////////////////////////////////////////////

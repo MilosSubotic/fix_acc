@@ -1,0 +1,29 @@
+/**
+ * @file fix_acc_test.h
+ * @date Apr 10, 2015
+ *
+ * @author Milos Subotic <milos.subotic.sm@gmail.com>
+ * @license MIT
+ *
+ * @brief Test for fix_acc.
+ *
+ * @version 1.0
+ * Changelog:
+ * 1.0 - Initial version.
+ *
+ */
+
+#ifndef FIX_ACC_TEST_H_
+#define FIX_ACC_TEST_H_
+
+///////////////////////////////////////////////////////////////////////////////
+
+#include "fix_acc.h"
+
+///////////////////////////////////////////////////////////////////////////////
+
+void fix_acc_test();
+
+///////////////////////////////////////////////////////////////////////////////
+
+#endif // FIX_ACC_TEST_H_
