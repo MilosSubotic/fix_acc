@@ -29,9 +29,8 @@
 #define DEBUG(x) do{ std::cout << #x << " = " << x << std::endl; }while(0)
 #define DEBUG_HEX(x) \
 	do{ \
-		std::cout << #x << " = " \
-			<< std::showbase << std::hex << x \
-			<< std::dec << std::noshowbase << std::endl; \
+		std::cout << #x << " = 0x" \
+			<< std::hex << x << std::dec << std::endl; \
 	}while(0)
 
 
@@ -67,6 +66,90 @@ namespace fix_acc {
 			uint64_t bits;
 		};
 
+
+		typedef __int128_t int128_t;
+		typedef __uint128_t uint128_t;
+
+		inline std::ostream& operator<<(std::ostream& os, const int128_t& n) {
+			if(os.flags() & std::ios::hex){
+				if(os.flags() & std::ios::showbase){
+					os.put('0').put('x');
+				}
+				bool non_zero_before = false;
+				for(int i = 31; i >= 0; i--){
+					uint8_t byte = (n >> 4*i) & 0xf;
+					if(non_zero_before || byte != 0){
+						non_zero_before = true;
+						if(byte < 10){
+							os.put(byte + '0');
+						}else{
+							os.put(byte + 'a' - 10);
+						}
+					}else{
+						if(i < os.width()){
+							os.put(os.fill());
+						}
+					}
+				}
+			}else if(os.flags() & std::ios::oct) {
+				if(os.flags() & std::ios::showbase){
+					os.put('0');
+				}
+
+				std::string buf; // Chars in reverse order.
+				int128_t t = n;
+				do{
+					buf += t % 8 + '0';
+					t /= 8;
+				}while(t != 0);
+				if(buf.size() < os.width()){
+					for(int i = 0; i < os.width() - buf.size(); i++){
+						os.put(os.fill());
+					}
+				}
+				for(int i = buf.size()-1; i >= 0; i--){
+					os.put(buf[i]);
+				}
+			}else{ // std::ios::dec
+				std::string buf; // Chars in reverse order.
+				int128_t t = n;
+				do{
+					buf += t % 10 + '0';
+					t /= 10;
+				}while(t != 0);
+				if(buf.size() < os.width()){
+					for(int i = 0; i < os.width() - buf.size(); i++){
+						os.put(os.fill());
+					}
+				}
+				for(int i = buf.size()-1; i >= 0; i--){
+					os.put(buf[i]);
+				}
+			}
+
+			return os;
+		}
+
+		inline std::ostream& operator<<(std::ostream& os, const uint128_t& n) {
+			return os << int128_t(n);
+		}
+
+		union int128_t_union {
+			int128_t i128;
+			int64_t i64[2];
+		};
+
+
+		inline int64_t highest_bit(int64_t i) {
+			int64_t result = 64;
+			asm(
+					"	bsr   %1, %0     \n"
+					: "=r"(result)
+					: "r"(i)
+			);
+			return result;
+		}
+
 	} // namespace detail
 
 	////////////////////////////////////
@@ -100,19 +183,92 @@ namespace fix_acc {
 		////////////////////////////////
 	public:
 		fix_acc_float() {
-			a[0] = 1;
-			a[1] = 2;
-			a[2] = 3;
-			a[3] = 0; a[4] = 0b1000000000000000000000; // 1.70141e+38
-			//a[3] = ~0L; a[4] = 0b1111111111111111111111; // Inf
-			//a[3] = 0; a[4] = 1;
+			a[0] = 0;
+			a[1] = 0;
+			a[2] = 0;
+			a[3] = 0;
+			a[4] = 0;
+		}
 
-			a[3] = 3L << 62;
-			a[4] = 0b1111111111111111111111; // __FLT_MAX__
+		fix_acc_float(
+				int64_t a0,
+				int64_t a1,
+				int64_t a2,
+				int64_t a3,
+				int64_t a4) {
+			a[0] = a0;
+			a[1] = a1;
+			a[2] = a2;
+			a[3] = a3;
+			a[4] = a4;
+		}
+
+		explicit fix_acc_float(float f) {
+			using namespace detail;
+			float_union fu;
+			fu.f = f;
+
+			// TODO Negative numbers.
+
+			if(fu.fields.exponent == 0){
+				// De-normals.
+				a[0] = fu.fields.mantisa;
+				a[1] = 0;
+				a[2] = 0;
+				a[3] = 0;
+				a[4] = 0;
+			}else{
+				fu.fields.exponent -= 1;
+				uint8_t a_index = fu.fields.exponent >> 6;
+				uint8_t shift = fu.fields.exponent & 0x3f;
+				int128_t_union iu;
+				iu.i64[0] = uint32_t(fu.fields.mantisa) | 0x800000;
+				iu.i64[1] = 0;
+				iu.i128 <<= shift;
+				switch(a_index){
+					case 0:
+						a[0] = iu.i64[0];
+						a[1] = iu.i64[1];
+						a[2] = 0;
+						a[3] = 0;
+						a[4] = 0;
+						break;
+					case 1:
+						a[0] = 0;
+						a[1] = iu.i64[0];
+						a[2] = iu.i64[1];
+						a[3] = 0;
+						a[4] = 0;
+						break;
+					case 2:
+						a[0] = 0;
+						a[1] = 0;
+						a[2] = iu.i64[0];
+						a[3] = iu.i64[1];
+						a[4] = 0;
+						break;
+					case 3:
+						a[0] = 0;
+						a[1] = 0;
+						a[2] = 0;
+						a[3] = iu.i64[0];
+						a[4] = iu.i64[1];
+						break;
+					case 4:
+						a[0] = 0;
+						a[1] = 0;
+						a[2] = 0;
+						a[3] = 0;
+						a[4] = iu.i64[0];
+						break;
+				}
+			}
 		}
 
 		explicit operator float() const {
-#if __x86_64__
+//#if __x86_64__
+#if 0
+
 #if 0
 			uint32_t result = 0;
 			if(a[4] < 0){
@@ -248,11 +404,63 @@ namespace fix_acc {
 				return fu.f;
 			}
 #endif
-#else
-			// TODO Implement.
-#error "Not implemented."
-			return 0;
-#endif
+#else // __x86_64__
+			using namespace detail;
+			float_union fu;
+			fu.fields.sign = 0;
+			// TODO Negative numbers.
+
+			if(a[4] != 0){
+				uint8_t hb = highest_bit(a[4]);
+				uint8_t shift = hb + 41;
+				int128_t_union iu;
+				iu.i64[0] = a[3];
+				iu.i64[1] = a[4];
+				iu.i128 >>= shift;
+				fu.fields.mantisa = iu.i64[0];
+				fu.fields.exponent = hb + 42 + 64*3;
+			}else if(a[3] != 0){
+				uint8_t hb = highest_bit(a[3]);
+				uint8_t shift = hb + 41;
+				int128_t_union iu;
+				iu.i64[0] = a[2];
+				iu.i64[1] = a[3];
+				iu.i128 >>= shift;
+				fu.fields.mantisa = iu.i64[0];
+				fu.fields.exponent = hb + 42 + 64*2;
+			}else if(a[2] != 0){
+				uint8_t hb = highest_bit(a[2]);
+				uint8_t shift = hb + 41;
+				int128_t_union iu;
+				iu.i64[0] = a[1];
+				iu.i64[1] = a[2];
+				iu.i128 >>= shift;
+				fu.fields.mantisa = iu.i64[0];
+				fu.fields.exponent = hb + 42 + 64*1;
+			}else if(a[1] != 0){
+				uint8_t hb = highest_bit(a[1]);
+				uint8_t shift = hb + 41;
+				int128_t_union iu;
+				iu.i64[0] = a[0];
+				iu.i64[1] = a[1];
+				iu.i128 >>= shift;
+				fu.fields.mantisa = iu.i64[0];
+				fu.fields.exponent = hb + 42;
+			}else if(a[0] != 0){
+				uint8_t hb = highest_bit(a[0]);
+				if(hb < 23){
+					// De-normals.
+					fu.fields.mantisa = a[0];
+					fu.fields.exponent = 0;
+				}else{
+					uint8_t shift = hb - 23;
+					fu.fields.mantisa = a[0] >> shift;
+					fu.fields.exponent = hb - 22;
+				}
+			}
+
+			return fu.f;
+#endif // __x86_64__
 		}
 
 		fix_acc_float& operator+=(float f) {
@@ -293,7 +501,7 @@ namespace fix_acc {
 		}else if(os.flags() & std::ios::oct){
 			// TODO Implement.
 		}else{ // std::ios::dec
-			   // TODO Implement.
+			  // TODO Implement.
 		}
 
 		return os;

@@ -22,8 +22,13 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#define BIGGEST_EXPONENT 254
+#define BIGGEST_MANTISA 0x7fffff
 
-float fields_to_float(uint32_t sign, uint32_t exponent, uint32_t mantisa){
+inline float fields_to_float(
+		uint32_t sign,
+		uint32_t exponent,
+		uint32_t mantisa) {
 	using namespace fix_acc::detail;
 	float_union fu;
 	fu.fields.sign = sign;
@@ -33,71 +38,19 @@ float fields_to_float(uint32_t sign, uint32_t exponent, uint32_t mantisa){
 }
 
 
-typedef __int128_t int128_t;
-typedef __uint128_t uint128_t;
-
-// TODO Add to static_float.
-std::ostream& operator<<(std::ostream& os, const int128_t& n) {
-	if(os.flags() & std::ios::hex){
-		if(os.flags() & std::ios::showbase){
-			os.put('0').put('x');
-		}
-		bool non_zero_before = false;
-		for(int i = 31; i >= 0; i--){
-			uint8_t byte = (n >> 4*i) & 0xf;
-			if(non_zero_before || byte != 0){
-				non_zero_before = true;
-				if(byte < 10){
-					os.put(byte + '0');
-				}else{
-					os.put(byte + 'a' - 10);
-				}
-			}else{
-				if(i < os.width()){
-					os.put(os.fill());
-				}
-			}
-		}
-	}else if(os.flags() & std::ios::oct) {
-		if(os.flags() & std::ios::showbase){
-			os.put('0');
-		}
-
-		std::string buf; // Chars in reverse order.
-		int128_t t = n;
-		do{
-			buf += t % 8 + '0';
-			t /= 8;
-		}while(t != 0);
-		if(buf.size() < os.width()){
-			for(int i = 0; i < os.width() - buf.size(); i++){
-				os.put(os.fill());
-			}
-		}
-		for(int i = buf.size()-1; i >= 0; i--){
-			os.put(buf[i]);
-		}
-	}else{ // std::ios::dec
-		std::string buf; // Chars in reverse order.
-		int128_t t = n;
-		do{
-			buf += t % 10 + '0';
-			t /= 10;
-		}while(t != 0);
-		if(buf.size() < os.width()){
-			for(int i = 0; i < os.width() - buf.size(); i++){
-				os.put(os.fill());
-			}
-		}
-		for(int i = buf.size()-1; i >= 0; i--){
-			os.put(buf[i]);
-		}
-	}
-
-	return os;
+float fix_acc_float_2_float(fix_acc::fix_acc_float fa) {
+	return float(fa);
 }
-std::ostream& operator<<(std::ostream& os, const uint128_t& n) {
-	return os << int128_t(n);
+
+float float_2_fix_acc_float_and_back(float f){
+	fix_acc::fix_acc_float fa(f);
+	//DEBUG_HEX(fa);
+	return float(fa);
+}
+
+void check_float_2_fix_acc_float_and_back(float f0){
+	float f1 = float_2_fix_acc_float_and_back(f0);
+	assert(f0 == f1);
 }
 
 void test0() {
@@ -105,23 +58,7 @@ void test0() {
 	using namespace std;
 	using namespace fix_acc;
 
-
 #if 0
-	{
-		int x = 100;
-		int128_t y = 100;
-
-		cout << "int:" << endl;
-		cout << setfill('0') << setw(5) << hex << x << endl;
-		cout << oct << x << noshowbase << endl;
-		cout << dec << x << endl << endl;
-
-		cout << "int128_t:" << endl;
-		cout << showbase << setfill('0') << setw(5) << hex << y << endl;
-		cout << oct << y << noshowbase << setw(0) << endl;
-		cout << dec << y << endl << endl;
-	}
-	{
 		float zero = fields_to_float(0, 0, 0);
 		float next_to_zero = fields_to_float(0, 0, 1);
 
@@ -130,14 +67,51 @@ void test0() {
 		fa += next_to_zero;
 
 		cout << hex << fa << dec << endl;
-	}
-
-	fix_acc_float fa;
-	cout << float(fa) << endl;
-
 #endif
+/*
+ 	// Highest bit in a[0].
+	float zero = fields_to_float(0, 0, 0);
+	check_float_2_fix_acc_float_and_back(zero);
 
+	float next_to_zero = fields_to_float(0, 0, 1);
+	check_float_2_fix_acc_float_and_back(next_to_zero);
+
+	float biggest_denormal = fields_to_float(0, 0, BIGGEST_MANTISA);
+	check_float_2_fix_acc_float_and_back(biggest_denormal);
+
+	float smallest_normal = fields_to_float(0, 1, 0);
+	check_float_2_fix_acc_float_and_back(smallest_normal);
+
+	check_float_2_fix_acc_float_and_back(fields_to_float(0, 2, 0));
+	check_float_2_fix_acc_float_and_back(fields_to_float(0, 41, 0));
+
+	// Highest bit in a[1].
+	check_float_2_fix_acc_float_and_back(fields_to_float(0, 42, 0));
+
+
+	// Highest bit in a[4].
+	float biggest_normal = fields_to_float(
+			0,
+			BIGGEST_EXPONENT,
+			BIGGEST_MANTISA);
+	check_float_2_fix_acc_float_and_back(biggest_normal);
+
+	float infinity = fields_to_float(
+			0,
+			BIGGEST_EXPONENT + 1,
+			0);
+	check_float_2_fix_acc_float_and_back(infinity);
+*/
+
+	for(uint32_t e = 0; e < BIGGEST_EXPONENT + 1; e++){
+		DEBUG(e);
+		for(uint32_t m = 0; m < BIGGEST_MANTISA; m++){
+			check_float_2_fix_acc_float_and_back(fields_to_float(0, e, m));
+		}
+	}
 }
+
+using namespace fix_acc::detail;
 
 uint128_t shift_and_add(uint128_t acc, uint64_t mantisa, uint8_t shift) {
 
