@@ -32,10 +32,11 @@ float fields_to_float(uint32_t sign, uint32_t exponent, uint32_t mantisa){
 	return fu.f;
 }
 
-// TODO Move to static_float.
+
 typedef __int128_t int128_t;
 typedef __uint128_t uint128_t;
 
+// TODO Add to static_float.
 std::ostream& operator<<(std::ostream& os, const int128_t& n) {
 	if(os.flags() & std::ios::hex){
 		if(os.flags() & std::ios::showbase){
@@ -95,7 +96,9 @@ std::ostream& operator<<(std::ostream& os, const int128_t& n) {
 
 	return os;
 }
-
+std::ostream& operator<<(std::ostream& os, const uint128_t& n) {
+	return os << int128_t(n);
+}
 
 void test0() {
 
@@ -136,7 +139,7 @@ void test0() {
 
 }
 
-uint128_t test1(uint128_t acc, uint64_t mantisa, uint8_t shift) {
+uint128_t shift_and_add(uint128_t acc, uint64_t mantisa, uint8_t shift) {
 
 	using namespace std;
 	using namespace fix_acc;
@@ -148,7 +151,18 @@ uint128_t test1(uint128_t acc, uint64_t mantisa, uint8_t shift) {
 	return acc;
 }
 
-void test2(
+void test1(){
+	using namespace std;
+
+	uint128_t u128 = shift_and_add(uint128_t(1), 0xf000000000000000L, 3);
+
+	//cout << showbase << setfill('0') << setw(32) << hex << u128 << endl;
+
+	assert(uint64_t(u128 >> 64) == 0x0000000000000007L);
+	assert(uint64_t(u128 & 0xffffffffffffffffL) == 0x8000000000000001L);
+}
+
+void add_3_nums(
 		uint64_t x0,
 		uint64_t x1,
 		uint64_t x2,
@@ -167,18 +181,20 @@ void test2(
 	z2 = r2;
 }
 
-void fix_acc_test(){
-	auto u128 = test1(1, 0xf000000000000000L, 3);
-	printf(
-			"0x%016lx%16lx\n",
-			uint64_t(u128 >> 64),
-			uint64_t(u128 & 0xffffffffffffffffL));
-
-
+void test2() {
 	uint64_t z0;
 	uint64_t z1;
 	uint64_t z2;
-	test2(1, 2, 3, 4, 5, 6, z0, z1, z2);
+	add_3_nums(1, 2, 3, 4, 5, 6, z0, z1, z2);
+	assert(z0 == 5);
+	assert(z1 == 7);
+	assert(z2 == 9);
+}
+
+void fix_acc_test(){
+	test0();
+	test1();
+	test2();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
