@@ -53,22 +53,11 @@ void check_float_2_fix_acc_float_and_back(float f0){
 	assert(f0 == f1);
 }
 
-void test0() {
+void test_constructors_and_conversion() {
 
 	using namespace std;
 	using namespace fix_acc;
 
-#if 0
-		float zero = fields_to_float(0, 0, 0);
-		float next_to_zero = fields_to_float(0, 0, 1);
-
-		fix_acc_float fa;
-
-		fa += next_to_zero;
-
-		cout << hex << fa << dec << endl;
-#endif
-/*
  	// Highest bit in a[0].
 	float zero = fields_to_float(0, 0, 0);
 	check_float_2_fix_acc_float_and_back(zero);
@@ -101,7 +90,6 @@ void test0() {
 			BIGGEST_EXPONENT + 1,
 			0);
 	check_float_2_fix_acc_float_and_back(infinity);
-*/
 
 	for(uint32_t e = 0; e < BIGGEST_EXPONENT + 1; e++){
 		DEBUG(e);
@@ -109,6 +97,32 @@ void test0() {
 			check_float_2_fix_acc_float_and_back(fields_to_float(0, e, m));
 		}
 	}
+}
+
+fix_acc::fix_acc_float acc;
+void add_asgn(float f) {
+	acc += f;
+}
+
+void test_addition_assignment() {
+	using namespace std;
+	using namespace fix_acc;
+
+	// De-normal add.
+	float next_to_zero = fields_to_float(0, 0, 1);
+	acc = 0;
+	for(int i = 0; i < 10; i++){
+		acc += next_to_zero;
+	}
+	assert(float(acc) == 10*next_to_zero);
+
+	// De-normal add carry.
+	acc = fields_to_float(0, 41, BIGGEST_MANTISA);
+	float a = fields_to_float(0, 0, 0x400000);
+	for(int i = 0; i < (1 << 18); i++){
+		acc += a;
+	}
+	assert(float(acc) == fields_to_float(0, 42, 0));
 }
 
 using namespace fix_acc::detail;
@@ -166,7 +180,8 @@ void test2() {
 }
 
 void fix_acc_test(){
-	test0();
+	//test_constructors_and_conversion();
+	test_addition_assignment();
 	test1();
 	test2();
 }

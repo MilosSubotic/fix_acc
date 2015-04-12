@@ -20,6 +20,7 @@
 
 #include <stdint.h>
 #include <limits>
+#include <cassert>
 #include <iostream>
 #include <iomanip>
 
@@ -70,7 +71,7 @@ namespace fix_acc {
 		typedef __int128_t int128_t;
 		typedef __uint128_t uint128_t;
 
-		inline std::ostream& operator<<(std::ostream& os, const int128_t& n) {
+		inline std::ostream& operator<<(std::ostream& os, const uint128_t& n) {
 			if(os.flags() & std::ios::hex){
 				if(os.flags() & std::ios::showbase){
 					os.put('0').put('x');
@@ -97,7 +98,7 @@ namespace fix_acc {
 				}
 
 				std::string buf; // Chars in reverse order.
-				int128_t t = n;
+				uint128_t t = n;
 				do{
 					buf += t % 8 + '0';
 					t /= 8;
@@ -112,7 +113,7 @@ namespace fix_acc {
 				}
 			}else{ // std::ios::dec
 				std::string buf; // Chars in reverse order.
-				int128_t t = n;
+				uint128_t t = n;
 				do{
 					buf += t % 10 + '0';
 					t /= 10;
@@ -130,18 +131,18 @@ namespace fix_acc {
 			return os;
 		}
 
-		inline std::ostream& operator<<(std::ostream& os, const uint128_t& n) {
-			return os << int128_t(n);
+		inline std::ostream& operator<<(std::ostream& os, const int128_t& n) {
+			return os << uint128_t(n);
 		}
 
-		union int128_t_union {
-			int128_t i128;
-			int64_t i64[2];
+		union uint128_t_union {
+			uint128_t i128;
+			uint64_t i64[2];
 		};
 
 
-		inline int64_t highest_bit(int64_t i) {
-			int64_t result = 64;
+		inline uint64_t highest_bit(uint64_t i) {
+			uint64_t result = 64;
 			asm(
 					"	bsr   %1, %0     \n"
 					: "=r"(result)
@@ -167,7 +168,7 @@ namespace fix_acc {
 	 */
 	class fix_acc_float {
 	public:
-		int64_t a[5];
+		uint64_t a[5];
 		/*
 		 * Non-biased exponents if highest 1 is:
 		 * 0th-22nd bit of a[0]: 0, denormal numbers
@@ -191,11 +192,11 @@ namespace fix_acc {
 		}
 
 		fix_acc_float(
-				int64_t a0,
-				int64_t a1,
-				int64_t a2,
-				int64_t a3,
-				int64_t a4) {
+				uint64_t a0,
+				uint64_t a1,
+				uint64_t a2,
+				uint64_t a3,
+				uint64_t a4) {
 			a[0] = a0;
 			a[1] = a1;
 			a[2] = a2;
@@ -204,65 +205,12 @@ namespace fix_acc {
 		}
 
 		explicit fix_acc_float(float f) {
-			using namespace detail;
-			float_union fu;
-			fu.f = f;
+			asgn(f);
+		}
 
-			// TODO Negative numbers.
-
-			if(fu.fields.exponent == 0){
-				// De-normals.
-				a[0] = fu.fields.mantisa;
-				a[1] = 0;
-				a[2] = 0;
-				a[3] = 0;
-				a[4] = 0;
-			}else{
-				fu.fields.exponent -= 1;
-				uint8_t a_index = fu.fields.exponent >> 6;
-				uint8_t shift = fu.fields.exponent & 0x3f;
-				int128_t_union iu;
-				iu.i64[0] = uint32_t(fu.fields.mantisa) | 0x800000;
-				iu.i64[1] = 0;
-				iu.i128 <<= shift;
-				switch(a_index){
-					case 0:
-						a[0] = iu.i64[0];
-						a[1] = iu.i64[1];
-						a[2] = 0;
-						a[3] = 0;
-						a[4] = 0;
-						break;
-					case 1:
-						a[0] = 0;
-						a[1] = iu.i64[0];
-						a[2] = iu.i64[1];
-						a[3] = 0;
-						a[4] = 0;
-						break;
-					case 2:
-						a[0] = 0;
-						a[1] = 0;
-						a[2] = iu.i64[0];
-						a[3] = iu.i64[1];
-						a[4] = 0;
-						break;
-					case 3:
-						a[0] = 0;
-						a[1] = 0;
-						a[2] = 0;
-						a[3] = iu.i64[0];
-						a[4] = iu.i64[1];
-						break;
-					case 4:
-						a[0] = 0;
-						a[1] = 0;
-						a[2] = 0;
-						a[3] = 0;
-						a[4] = iu.i64[0];
-						break;
-				}
-			}
+		fix_acc_float& operator=(float f) {
+			asgn(f);
+			return *this;
 		}
 
 		explicit operator float() const {
@@ -413,7 +361,7 @@ namespace fix_acc {
 			if(a[4] != 0){
 				uint8_t hb = highest_bit(a[4]);
 				uint8_t shift = hb + 41;
-				int128_t_union iu;
+				uint128_t_union iu;
 				iu.i64[0] = a[3];
 				iu.i64[1] = a[4];
 				iu.i128 >>= shift;
@@ -422,7 +370,7 @@ namespace fix_acc {
 			}else if(a[3] != 0){
 				uint8_t hb = highest_bit(a[3]);
 				uint8_t shift = hb + 41;
-				int128_t_union iu;
+				uint128_t_union iu;
 				iu.i64[0] = a[2];
 				iu.i64[1] = a[3];
 				iu.i128 >>= shift;
@@ -431,7 +379,7 @@ namespace fix_acc {
 			}else if(a[2] != 0){
 				uint8_t hb = highest_bit(a[2]);
 				uint8_t shift = hb + 41;
-				int128_t_union iu;
+				uint128_t_union iu;
 				iu.i64[0] = a[1];
 				iu.i64[1] = a[2];
 				iu.i128 >>= shift;
@@ -440,7 +388,7 @@ namespace fix_acc {
 			}else if(a[1] != 0){
 				uint8_t hb = highest_bit(a[1]);
 				uint8_t shift = hb + 41;
-				int128_t_union iu;
+				uint128_t_union iu;
 				iu.i64[0] = a[0];
 				iu.i64[1] = a[1];
 				iu.i128 >>= shift;
@@ -464,25 +412,186 @@ namespace fix_acc {
 		}
 
 		fix_acc_float& operator+=(float f) {
+			if(f < 0){
+				sub_asgn(-f);
+			}else{
+				add_asgn(f);
+			}
+			return *this;
+		}
+
+		fix_acc_float& operator-=(float f) {
+			if(f < 0){
+				add_asgn(-f);
+			}else{
+				sub_asgn(f);
+			}
+			return *this;
+		}
+
+
+		////////////////////////////////
+
+	private:
+
+		inline void asgn(float f) {
+			using namespace detail;
+			float_union fu;
+			fu.f = f;
+
+			// TODO Negative numbers.
+
+			if(fu.fields.exponent == 0){
+				// De-normals.
+				a[0] = fu.fields.mantisa;
+				a[1] = 0;
+				a[2] = 0;
+				a[3] = 0;
+				a[4] = 0;
+			}else{
+				fu.fields.exponent -= 1;
+				uint8_t a_index = fu.fields.exponent >> 6;
+				uint8_t shift = fu.fields.exponent & 0x3f;
+				uint128_t_union iu;
+				iu.i64[0] = uint32_t(fu.fields.mantisa) | 0x800000;
+				iu.i64[1] = 0;
+				iu.i128 <<= shift;
+				switch(a_index){
+					case 0:
+						a[0] = iu.i64[0];
+						a[1] = iu.i64[1];
+						a[2] = 0;
+						a[3] = 0;
+						a[4] = 0;
+						break;
+					case 1:
+						a[0] = 0;
+						a[1] = iu.i64[0];
+						a[2] = iu.i64[1];
+						a[3] = 0;
+						a[4] = 0;
+						break;
+					case 2:
+						a[0] = 0;
+						a[1] = 0;
+						a[2] = iu.i64[0];
+						a[3] = iu.i64[1];
+						a[4] = 0;
+						break;
+					case 3:
+						a[0] = 0;
+						a[1] = 0;
+						a[2] = 0;
+						a[3] = iu.i64[0];
+						a[4] = iu.i64[1];
+						break;
+					case 4:
+						a[0] = 0;
+						a[1] = 0;
+						a[2] = 0;
+						a[3] = 0;
+						a[4] = iu.i64[0];
+						break;
+				}
+			}
+		}
+
+		/**
+		 * *this += fabs(f).
+		 * @param f positive float.
+		 */
+		inline void add_asgn(float f) {
+			using namespace detail;
+			float_union fu;
+			fu.f = f;
+			assert(fu.fields.sign == 0);
+
+//#if __x86_64__
+#if 0
+
 			// TODO
 			// Have switch on exponent and then jump to code
 			// with inline assembly what you need.
 			// Use %0, %1 to optimize out variables to registers if possible.
 			// Use shld to shift over two regs.
-#if __x86_64__
-			using namespace detail;
-			float_union fu;
-			fu.f = f;
-			// If exponent field is 0 then there is no invisible 1.
 #else
-			// TODO Implement.
-#error "Not implemented."
-#endif
+			uint64_t old;
+			bool carry;
+			if(fu.fields.exponent == 0){
+				// De-normals.
+				old = a[0];
+				a[0] += fu.fields.mantisa;
+				carry = a[0] < old;
 
-			return *this;
+				old = a[1];
+				a[1] += carry;
+				carry = a[1] < old;
+
+				old = a[2];
+				a[2] += carry;
+				carry = a[2] < old;
+
+				old = a[3];
+				a[3] += carry;
+				carry = a[3] < old;
+
+				old = a[4];
+				a[4] += carry;
+				carry = a[4] < old;
+			}else{
+				fu.fields.exponent -= 1;
+				uint8_t a_index = fu.fields.exponent >> 6;
+				uint8_t shift = fu.fields.exponent & 0x3f;
+				uint128_t_union iu;
+				iu.i64[0] = uint32_t(fu.fields.mantisa) | 0x800000;
+				iu.i64[1] = 0;
+				iu.i128 <<= shift;
+				switch(a_index){
+					case 0:
+						a[0] += iu.i64[0];
+						a[1] = iu.i64[1] + (iu.i64[0] > a[0]);
+						a[2] = 0;
+						a[3] = 0;
+						a[4] = 0;
+						break;
+					case 1:
+						a[0] = 0;
+						a[1] = iu.i64[0];
+						a[2] = iu.i64[1];
+						a[3] = 0;
+						a[4] = 0;
+						break;
+					case 2:
+						a[0] = 0;
+						a[1] = 0;
+						a[2] = iu.i64[0];
+						a[3] = iu.i64[1];
+						a[4] = 0;
+						break;
+					case 3:
+						a[0] = 0;
+						a[1] = 0;
+						a[2] = 0;
+						a[3] = iu.i64[0];
+						a[4] = iu.i64[1];
+						break;
+					case 4:
+						a[0] = 0;
+						a[1] = 0;
+						a[2] = 0;
+						a[3] = 0;
+						a[4] = iu.i64[0];
+						break;
+				}
+			}
+
+#endif
 		}
 
-		////////////////////////////////
+		inline void sub_asgn(float f) {
+
+		}
+
 	};
 
 	inline std::ostream& operator<<(std::ostream& os, const fix_acc_float& n) {
