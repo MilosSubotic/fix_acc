@@ -1,0 +1,17 @@
+
+
+- Testing:
+	- Could DeJaGNU help
+	- Use MPFR for reference
+	- Make something for easy testing
+	- Code coverage
+
+- Optimizations:
+	- Array of inline function as lookup table
+		- After all 5 way lookup table indexing and function call 
+			is a unpredictable (for speculation in CPU) and slow as 
+			mul-add-jmp, it's even better because it don't need padding,
+			and it's still question could I enforce equal distance between 
+			jump addresses in inline assembler.
+	- Measure perfomance and optimize:
+		- OProfile
