@@ -1,15 +1,9 @@
 /**
- * @file fix_acc.h
- * @date Feb 16, 2015
  *
  * @author Milos Subotic <milos.subotic.sm@gmail.com>
  * @license MIT
  *
  * @brief Fixed-point implementation of accumulator for accurate summation.
- *
- * @version 1.0
- * Changelog:
- * 1.0 - Initial version.
  *
  */
 
@@ -156,18 +150,11 @@ namespace fix_acc {
 
 	////////////////////////////////////
 
-	/*
-	 // Non-optimized for speed, but more flexible with range.
-	 template<>
-	 class fix_acc {
-	 };
-	 */
-
 	/**
-	 * @class fix_acc_float
+	 * @class fasp
 	 * @brief Accumulator with single-precision float numeric range.
 	 */
-	class fix_acc_float {
+	class fasp {
 	public:
 		/*
 		 * Non-biased exponents if highest 1 is:
@@ -184,7 +171,7 @@ namespace fix_acc {
 
 		////////////////////////////////
 	public:
-		fix_acc_float() {
+		fasp() {
 			a[0] = 0;
 			a[1] = 0;
 			a[2] = 0;
@@ -192,7 +179,7 @@ namespace fix_acc {
 			a[4] = 0;
 		}
 
-		explicit fix_acc_float(
+		explicit fasp(
 				uint64_t a0,
 				uint64_t a1,
 				uint64_t a2,
@@ -205,11 +192,11 @@ namespace fix_acc {
 			a[4] = a4;
 		}
 
-		explicit fix_acc_float(float f) {
+		explicit fasp(float f) {
 			asgn(f);
 		}
 
-		fix_acc_float& operator=(float f) {
+		fasp& operator=(float f) {
 			asgn(f);
 			return *this;
 		}
@@ -412,7 +399,7 @@ namespace fix_acc {
 #endif // __x86_64__
 		}
 
-		fix_acc_float& operator+=(float f) {
+		fasp& operator+=(float f) {
 			if(f < 0){
 				sub_asgn(-f);
 			}else{
@@ -421,7 +408,7 @@ namespace fix_acc {
 			return *this;
 		}
 
-		fix_acc_float& operator-=(float f) {
+		fasp& operator-=(float f) {
 			if(f < 0){
 				add_asgn(-f);
 			}else{
@@ -595,7 +582,7 @@ namespace fix_acc {
 
 	};
 
-	inline std::ostream& operator<<(std::ostream& os, const fix_acc_float& n) {
+	inline std::ostream& operator<<(std::ostream& os, const fasp& n) {
 		if(os.flags() & std::ios::hex){
 			if(os.flags() & std::ios::showbase){
 				os.put('0').put('x');

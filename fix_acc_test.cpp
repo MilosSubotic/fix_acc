@@ -1,16 +1,9 @@
 /**
- * @file fix_acc_test.cpp
- * @date Feb 16, 2015
  *
  * @author Milos Subotic <milos.subotic.sm@gmail.com>
  * @license MIT
  *
  * @brief Test for fix_acc.
- *
- * @version 2.0
- * Changelog:
- * 1.0 - Initial version.
- * 2.0 - No main() in this file.
  *
  */
 
@@ -38,12 +31,12 @@ inline float fields_to_float(
 }
 
 
-float fix_acc_float_2_float(fix_acc::fix_acc_float fa) {
+float fix_acc_float_2_float(fix_acc::fasp fa) {
 	return float(fa);
 }
 
 float float_2_fix_acc_float_and_back(float f){
-	fix_acc::fix_acc_float fa(f);
+	fix_acc::fasp fa(f);
 	//DEBUG_HEX(fa);
 	return float(fa);
 }
@@ -99,7 +92,7 @@ void test_constructors_and_conversion() {
 	}
 }
 
-fix_acc::fix_acc_float acc;
+fix_acc::fasp acc;
 void add_asgn(float f) {
 	acc += f;
 }
