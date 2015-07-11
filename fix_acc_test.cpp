@@ -12,6 +12,7 @@
 #include "fix_acc_test.h"
 
 #include <cassert>
+#include <vector>
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -31,19 +32,49 @@ inline float fields_to_float(
 }
 
 
-float fix_acc_float_2_float(fix_acc::fasp fa) {
+float fasp_2_float(fix_acc::fasp fa) {
 	return float(fa);
 }
 
-float float_2_fix_acc_float_and_back(float f){
+float float_2_fasp_and_back(float f){
 	fix_acc::fasp fa(f);
 	//DEBUG_HEX(fa);
 	return float(fa);
 }
 
-void check_float_2_fix_acc_float_and_back(float f0){
-	float f1 = float_2_fix_acc_float_and_back(f0);
+void check_float_2_fasp_and_back(float f0){
+	float f1 = float_2_fasp_and_back(f0);
 	assert(f0 == f1);
+}
+
+template<typename AccType>
+AccType sum_vec(std::vector<float> to_sum) {
+	AccType acc = 0;
+	for(auto iter = to_sum.begin(); iter != to_sum.end(); iter++){
+		acc += *iter;
+	}
+	return acc;
+}
+
+void test_problem() {
+	// One big many smalls problem.
+
+	float big = fields_to_float(0, 127, 0);
+	float small = fields_to_float(0, 127-24, 0);
+
+	std::vector<float> many_smalls((1 << 24) + 1);
+	for(auto iter = many_smalls.begin(); iter != many_smalls.end(); iter++){
+		*iter = small;
+	}
+
+	std::vector<float> smalls_and_big = many_smalls;
+	smalls_and_big[smalls_and_big.size()-1] = big;
+	assert(sum_vec<float>(smalls_and_big) == 2.0);
+
+	// Because small is less that big's epsilon adding doesn't work.
+	std::vector<float> big_and_smalls = many_smalls;
+	big_and_smalls[0] = big;
+	assert(sum_vec<float>(big_and_smalls) == 1.0);
 }
 
 void test_constructors_and_conversion() {
@@ -53,22 +84,22 @@ void test_constructors_and_conversion() {
 
  	// Highest bit in a[0].
 	float zero = fields_to_float(0, 0, 0);
-	check_float_2_fix_acc_float_and_back(zero);
+	check_float_2_fasp_and_back(zero);
 
 	float next_to_zero = fields_to_float(0, 0, 1);
-	check_float_2_fix_acc_float_and_back(next_to_zero);
+	check_float_2_fasp_and_back(next_to_zero);
 
 	float biggest_denormal = fields_to_float(0, 0, BIGGEST_MANTISA);
-	check_float_2_fix_acc_float_and_back(biggest_denormal);
+	check_float_2_fasp_and_back(biggest_denormal);
 
 	float smallest_normal = fields_to_float(0, 1, 0);
-	check_float_2_fix_acc_float_and_back(smallest_normal);
+	check_float_2_fasp_and_back(smallest_normal);
 
-	check_float_2_fix_acc_float_and_back(fields_to_float(0, 2, 0));
-	check_float_2_fix_acc_float_and_back(fields_to_float(0, 41, 0));
+	check_float_2_fasp_and_back(fields_to_float(0, 2, 0));
+	check_float_2_fasp_and_back(fields_to_float(0, 41, 0));
 
 	// Highest bit in a[1].
-	check_float_2_fix_acc_float_and_back(fields_to_float(0, 42, 0));
+	check_float_2_fasp_and_back(fields_to_float(0, 42, 0));
 
 
 	// Highest bit in a[4].
@@ -76,18 +107,18 @@ void test_constructors_and_conversion() {
 			0,
 			BIGGEST_EXPONENT,
 			BIGGEST_MANTISA);
-	check_float_2_fix_acc_float_and_back(biggest_normal);
+	check_float_2_fasp_and_back(biggest_normal);
 
 	float infinity = fields_to_float(
 			0,
 			BIGGEST_EXPONENT + 1,
 			0);
-	check_float_2_fix_acc_float_and_back(infinity);
+	check_float_2_fasp_and_back(infinity);
 
 	for(uint32_t e = 0; e < BIGGEST_EXPONENT + 1; e++){
 		DEBUG(e);
 		for(uint32_t m = 0; m < BIGGEST_MANTISA; m++){
-			check_float_2_fix_acc_float_and_back(fields_to_float(0, e, m));
+			check_float_2_fasp_and_back(fields_to_float(0, e, m));
 		}
 	}
 }
@@ -173,6 +204,7 @@ void test2() {
 }
 
 void fix_acc_test(){
+	test_problem();
 	//test_constructors_and_conversion();
 	test_addition_assignment();
 	test1();
