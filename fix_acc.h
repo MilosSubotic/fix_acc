@@ -142,6 +142,7 @@ namespace fix_acc {
 
 
 		inline uint64_t highest_bit(uint64_t i) {
+			// TODO Platform independed C++ code.
 			uint64_t result = 64;
 			asm(
 					"	bsr   %1, %0     \n"
@@ -168,7 +169,6 @@ namespace fix_acc {
 	 */
 	class fix_acc_float {
 	public:
-		uint64_t a[5];
 		/*
 		 * Non-biased exponents if highest 1 is:
 		 * 0th-22nd bit of a[0]: 0, denormal numbers
@@ -180,6 +180,7 @@ namespace fix_acc {
 		 * 21st bit of a[4]: 254
 		 * 22nd bit of a[4]: infinity
 		 */
+		uint64_t a[5];
 
 		////////////////////////////////
 	public:
@@ -191,7 +192,7 @@ namespace fix_acc {
 			a[4] = 0;
 		}
 
-		fix_acc_float(
+		explicit fix_acc_float(
 				uint64_t a0,
 				uint64_t a1,
 				uint64_t a2,
