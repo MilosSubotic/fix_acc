@@ -8,7 +8,6 @@
  */
 
 ///////////////////////////////////////////////////////////////////////////////
-
 #include "fix_acc_test.h"
 
 #include <cassert>
@@ -33,18 +32,17 @@ inline float fields_to_float(
 	return fu.f;
 }
 
-
 float fasp_2_float(fix_acc::fasp fa) {
 	return float(fa);
 }
 
-float float_2_fasp_and_back(float f){
+float float_2_fasp_and_back(float f) {
 	fix_acc::fasp fa(f);
 	//DEBUG_HEX(fa);
 	return float(fa);
 }
 
-void check_float_2_fasp_and_back(float f0){
+void check_float_2_fasp_and_back(float f0) {
 	float f1 = float_2_fasp_and_back(f0);
 	assert(f0 == f1);
 }
@@ -62,7 +60,7 @@ AccType sum_vec(std::vector<float> to_sum) {
 template<typename T> T kahan_sum(std::vector<T> for_sum) {
 	T sum = 0.0;
 	T c = 0.0;
-	for(auto iter = for_sum.begin(); iter != for_sum.end(); iter++) {
+	for(auto iter = for_sum.begin(); iter != for_sum.end(); iter++){
 		T y = *iter - c;
 
 		T t = sum + y;
@@ -72,31 +70,30 @@ template<typename T> T kahan_sum(std::vector<T> for_sum) {
 	return sum;
 }
 
-
 void test_problem() {
 	// One big many smalls problem.
 	float big = fields_to_float(0, 127, 0);
-	float small = fields_to_float(0, 127-24, 0);
-	float tiny = fields_to_float(0, 127-48, 0);
+	float small = fields_to_float(0, 127 - 24, 0);
+	float tiny = fields_to_float(0, 127 - 48, 0);
 
-    const int num_smalls_in_big = 1 << 24;
-    const int num_tinies_in_smalls = 1 << 24;
+	const int num_smalls_in_big = 1 << 24;
+	const int num_tinies_in_smalls = 1 << 24;
 
 	std::vector<float> many_smalls((1 << 24) + 1);
 	for(auto iter = many_smalls.begin(); iter != many_smalls.end(); iter++){
 		*iter = small;
 	}
 
-    auto k = small/tiny;
+	auto k = small / tiny;
 	//DEBUG(k);
 
 	std::vector<float> many_tinies(k);
-	for(auto iter = many_tinies.begin(); iter != many_tinies.end(); iter++) {
+	for(auto iter = many_tinies.begin(); iter != many_tinies.end(); iter++){
 		*iter = tiny;
 	}
 
 	std::vector<float> smalls_and_big(num_smalls_in_big + 1, small);
-	smalls_and_big[smalls_and_big.size()-1] = big;
+	smalls_and_big[smalls_and_big.size() - 1] = big;
 	assert(sum_vec<float>(smalls_and_big) == 2.0);
 
 	// Because small is less that big's epsilon adding doesn't work.
@@ -104,26 +101,31 @@ void test_problem() {
 	big_and_smalls[0] = big;
 	assert(sum_vec<float>(big_and_smalls) == 1.0);
 
-	// Aditional problem       
-	std::vector<float> big_and_smalls_and_tinies(1 + num_smalls_in_big-2 + num_tinies_in_smalls*2, tiny);
+	// Aditional problem
+	std::vector<float> big_and_smalls_and_tinies(
+			1 + num_smalls_in_big - 2 + num_tinies_in_smalls * 2,
+			tiny);
 	big_and_smalls_and_tinies[0] = big;
-	for(int i = 1; i < many_smalls.size()-5; i++) {
+	for(int i = 1; i < many_smalls.size() - 5; i++){
 		big_and_smalls_and_tinies[i] = small;
 	}
 	assert(sum_vec<float>(big_and_smalls_and_tinies) == 1.0);
 
-    auto x = kahan_sum(smalls_and_big);
-    auto y = kahan_sum(big_and_smalls);
-    auto z = kahan_sum(big_and_smalls_and_tinies);
+	auto x = kahan_sum(smalls_and_big);
+	auto y = kahan_sum(big_and_smalls);
+	auto z = kahan_sum(big_and_smalls_and_tinies);
 
-    DEBUG(x);
-    DEBUG(y);
-    DEBUG(y-2);
-    DEBUG(z);
+	DEBUG(x);
+	DEBUG(y);
+	DEBUG(y-2);
+	DEBUG(z);
 
-	assert(kahan_sum(smalls_and_big) == 2.0);                   // Provera Kahana na primeru smalls_and_big
-	assert(kahan_sum(big_and_smalls) == 2.0);                   // Provera Kahana na primeru big_and_smalls
-	assert(kahan_sum(big_and_smalls_and_tinies) == 2.0);      	// Provera Kahana na primeru big_and_smalls_and_tinies
+	assert(kahan_sum(smalls_and_big) == 2.0);
+	// Provera Kahana na primeru smalls_and_big
+	assert(kahan_sum(big_and_smalls) == 2.0);
+	// Provera Kahana na primeru big_and_smalls
+	assert(kahan_sum(big_and_smalls_and_tinies) == 2.0);
+	// Provera Kahana na primeru big_and_smalls_and_tinies
 
 }
 
@@ -132,7 +134,7 @@ void test_constructors_and_conversion() {
 	using namespace std;
 	using namespace fix_acc;
 
- 	// Highest bit in a[0].
+	// Highest bit in a[0].
 	float zero = fields_to_float(0, 0, 0);
 	check_float_2_fasp_and_back(zero);
 
@@ -151,7 +153,6 @@ void test_constructors_and_conversion() {
 	// Highest bit in a[1].
 	check_float_2_fasp_and_back(fields_to_float(0, 42, 0));
 
-
 	// Highest bit in a[4].
 	float biggest_normal = fields_to_float(
 			0,
@@ -159,10 +160,7 @@ void test_constructors_and_conversion() {
 			BIGGEST_MANTISA);
 	check_float_2_fasp_and_back(biggest_normal);
 
-	float infinity = fields_to_float(
-			0,
-			BIGGEST_EXPONENT + 1,
-			0);
+	float infinity = fields_to_float(0, BIGGEST_EXPONENT + 1, 0);
 	check_float_2_fasp_and_back(infinity);
 
 	for(uint32_t e = 0; e < BIGGEST_EXPONENT + 1; e++){
@@ -213,7 +211,7 @@ uint128_t shift_and_add(uint128_t acc, uint64_t mantisa, uint8_t shift) {
 	return acc;
 }
 
-void test1(){
+void test1() {
 	using namespace std;
 
 	uint128_t u128 = shift_and_add(uint128_t(1), 0xf000000000000000L, 3);
@@ -253,8 +251,8 @@ void test2() {
 	assert(z2 == 9);
 }
 
-void fix_acc_test(){
-    std::cout.precision(20);
+void fix_acc_test() {
+	std::cout.precision(20);
 	test_problem();
 	//test_constructors_and_conversion();
 	test_addition_assignment();
