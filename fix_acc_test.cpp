@@ -13,11 +13,13 @@
 
 #include <cassert>
 #include <vector>
+#include <iomanip>
 
 ///////////////////////////////////////////////////////////////////////////////
 
 #define BIGGEST_EXPONENT 254
 #define BIGGEST_MANTISA 0x7fffff
+#define DEBUG(x) do{ std::cout << #x << " = " << x << std::endl; }while(0)
 
 inline float fields_to_float(
 		uint32_t sign,
@@ -56,25 +58,73 @@ AccType sum_vec(std::vector<float> to_sum) {
 	return acc;
 }
 
+// Implementation of Kahan
+template<typename T> T kahan_sum(std::vector<T> for_sum) {
+	T sum = 0.0;
+	T c = 0.0;
+	for(auto iter = for_sum.begin(); iter != for_sum.end(); iter++) {
+		T y = *iter - c;
+
+		T t = sum + y;
+		c = (t - sum) - y;
+		sum = t;
+	}
+	return sum;
+}
+
+
 void test_problem() {
 	// One big many smalls problem.
-
 	float big = fields_to_float(0, 127, 0);
 	float small = fields_to_float(0, 127-24, 0);
+	float tiny = fields_to_float(0, 127-48, 0);
+
+    const int num_smalls_in_big = 1 << 24;
+    const int num_tinies_in_smalls = 1 << 24;
 
 	std::vector<float> many_smalls((1 << 24) + 1);
 	for(auto iter = many_smalls.begin(); iter != many_smalls.end(); iter++){
 		*iter = small;
 	}
 
-	std::vector<float> smalls_and_big = many_smalls;
+    auto k = small/tiny;
+	//DEBUG(k);
+
+	std::vector<float> many_tinies(k);
+	for(auto iter = many_tinies.begin(); iter != many_tinies.end(); iter++) {
+		*iter = tiny;
+	}
+
+	std::vector<float> smalls_and_big(num_smalls_in_big + 1, small);
 	smalls_and_big[smalls_and_big.size()-1] = big;
 	assert(sum_vec<float>(smalls_and_big) == 2.0);
 
 	// Because small is less that big's epsilon adding doesn't work.
-	std::vector<float> big_and_smalls = many_smalls;
+	std::vector<float> big_and_smalls(1 + num_smalls_in_big, small);
 	big_and_smalls[0] = big;
 	assert(sum_vec<float>(big_and_smalls) == 1.0);
+
+	// Aditional problem       
+	std::vector<float> big_and_smalls_and_tinies(1 + num_smalls_in_big-2 + num_tinies_in_smalls*2, tiny);
+	big_and_smalls_and_tinies[0] = big;
+	for(int i = 1; i < many_smalls.size()-5; i++) {
+		big_and_smalls_and_tinies[i] = small;
+	}
+	assert(sum_vec<float>(big_and_smalls_and_tinies) == 1.0);
+
+    auto x = kahan_sum(smalls_and_big);
+    auto y = kahan_sum(big_and_smalls);
+    auto z = kahan_sum(big_and_smalls_and_tinies);
+
+    DEBUG(x);
+    DEBUG(y);
+    DEBUG(y-2);
+    DEBUG(z);
+
+	assert(kahan_sum(smalls_and_big) == 2.0);                   // Provera Kahana na primeru smalls_and_big
+	assert(kahan_sum(big_and_smalls) == 2.0);                   // Provera Kahana na primeru big_and_smalls
+	assert(kahan_sum(big_and_smalls_and_tinies) == 2.0);      	// Provera Kahana na primeru big_and_smalls_and_tinies
+
 }
 
 void test_constructors_and_conversion() {
@@ -204,6 +254,7 @@ void test2() {
 }
 
 void fix_acc_test(){
+    std::cout.precision(20);
 	test_problem();
 	//test_constructors_and_conversion();
 	test_addition_assignment();
