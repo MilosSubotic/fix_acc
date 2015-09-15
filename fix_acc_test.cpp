@@ -79,54 +79,35 @@ void test_problem() {
 	const int num_smalls_in_big = 1 << 24;
 	const int num_tinies_in_smalls = 1 << 24;
 
-	std::vector<float> many_smalls((1 << 24) + 1);
-	for(auto iter = many_smalls.begin(); iter != many_smalls.end(); iter++){
-		*iter = small;
-	}
-
-	auto k = small / tiny;
-	//DEBUG(k);
-
-	std::vector<float> many_tinies(k);
-	for(auto iter = many_tinies.begin(); iter != many_tinies.end(); iter++){
-		*iter = tiny;
-	}
 
 	std::vector<float> smalls_and_big(num_smalls_in_big + 1, small);
 	smalls_and_big[smalls_and_big.size() - 1] = big;
-	assert(sum_vec<float>(smalls_and_big) == 2.0);
 
-	// Because small is less that big's epsilon adding doesn't work.
 	std::vector<float> big_and_smalls(1 + num_smalls_in_big, small);
 	big_and_smalls[0] = big;
-	assert(sum_vec<float>(big_and_smalls) == 1.0);
 
-	// Aditional problem
-	std::vector<float> big_and_smalls_and_tinies(
-			1 + num_smalls_in_big - 2 + num_tinies_in_smalls * 2,
+	std::vector<float> big_smalls_and_tinies(
+			1 + num_smalls_in_big/2 + num_tinies_in_smalls*num_smalls_in_big/2,
 			tiny);
-	big_and_smalls_and_tinies[0] = big;
-	for(int i = 1; i < many_smalls.size() - 5; i++){
-		big_and_smalls_and_tinies[i] = small;
+	big_smalls_and_tinies[0] = big;
+	for(int i = 1; i < 1 + num_smalls_in_big/2; i++){
+		big_smalls_and_tinies[i] = small;
 	}
-	assert(sum_vec<float>(big_and_smalls_and_tinies) == 1.0);
 
-	auto x = kahan_sum(smalls_and_big);
-	auto y = kahan_sum(big_and_smalls);
-	auto z = kahan_sum(big_and_smalls_and_tinies);
 
-	DEBUG(x);
-	DEBUG(y);
-	DEBUG(y-2);
-	DEBUG(z);
+	// Checking algorithms with problems.
+
+	assert(sum_vec<float>(smalls_and_big) == 2.0);
+	// Adding fails because small is less that big's epsilon.
+	assert(sum_vec<float>(big_and_smalls) == 1.0);
+	// This also doesn't work.
+	assert(sum_vec<float>(big_smalls_and_tinies) == 1.0);
 
 	assert(kahan_sum(smalls_and_big) == 2.0);
-	// Provera Kahana na primeru smalls_and_big
 	assert(kahan_sum(big_and_smalls) == 2.0);
-	// Provera Kahana na primeru big_and_smalls
-	assert(kahan_sum(big_and_smalls_and_tinies) == 2.0);
-	// Provera Kahana na primeru big_and_smalls_and_tinies
-
+	// Kahan fails because tiny is less than small's epsilon
+	// and because that calculation of y in Kahan fails.
+	assert(kahan_sum(big_smalls_and_tinies) == 1.5);
 }
 
 void test_constructors_and_conversion() {
