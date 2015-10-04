@@ -21,7 +21,7 @@
 
 #define BIGGEST_EXPONENT 254
 #define BIGGEST_MANTISA 0x7fffff
-#define DEBUG(x) do{ std::cout << #x << " = " << x << std::endl; }while(0)
+//#define DEBUG(x) do{ std::cout << #x << " = " << x << std::endl; }while(0)
 
 inline float fields_to_float(
 		uint32_t sign,
@@ -76,12 +76,11 @@ T kahan_sum(std::vector<T> for_sum) {
 }
  
 float fix_acc_sum(std::vector<float> f) {
-	fix_acc::fasp acc = 0;
+	fix_acc::fasp acc(0.0);
 	for(auto iter = f.begin(); iter != f.end(); iter++) {
 		acc += *iter;
 	}
 	
-	//DEBUG_HEX(acc);
 	return float(acc);
 }
 
@@ -100,14 +99,6 @@ void test_problem() {
 		*iter = small;
 	}
 
-    auto k = small/tiny;
-	//DEBUG(k);
-
-	std::vector<float> many_tinies(k);
-	for(auto iter = many_tinies.begin(); iter != many_tinies.end(); iter++) {
-		*iter = tiny;
-	}
-
 	std::vector<float> smalls_and_big(num_smalls_in_big + 1, small);
 	smalls_and_big[smalls_and_big.size()-1] = big;
 
@@ -116,9 +107,9 @@ void test_problem() {
 	big_and_smalls[0] = big;
 
 	// Aditional problem       
-	std::vector<float> big_and_smalls_and_tinies(1 + num_smalls_in_big + 2*num_tinies_in_smalls, tiny);
+	std::vector<float> big_and_smalls_and_tinies(1 + num_smalls_in_big + 4*num_tinies_in_smalls, tiny);
 	big_and_smalls_and_tinies[0] = big;
-	for(int i = 1; i < num_smalls_in_big + 1; i++) {
+	for(int i = 1; i < 1 + num_smalls_in_big; i++) {
 		big_and_smalls_and_tinies[i] = small;
 	}
 
@@ -146,7 +137,7 @@ void test_problem() {
 
 	assert(fix_acc_sum(smalls_and_big) == 2.0);
 	assert(fix_acc_sum(big_and_smalls) == 2.0);
-	assert(fix_acc_sum(big_and_smalls_and_tinies) == 2.0 + 2*small);
+	assert(fix_acc_sum(big_and_smalls_and_tinies) == 2.0 + 4*small);
 }
 
 void test_constructors_and_conversion() {
@@ -278,10 +269,12 @@ void test2() {
 void fix_acc_test(){
     std::cout.precision(20);
 	test_problem();
+#if 0
 	//test_constructors_and_conversion();
 	test_addition_assignment();
 	test1();
 	test2();
+#endif	
 }
 
 ///////////////////////////////////////////////////////////////////////////////

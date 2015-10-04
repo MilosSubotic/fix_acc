@@ -160,11 +160,11 @@ namespace fix_acc {
 		 * Non-biased exponents if highest 1 is:
 		 * 0th-22nd bit of a[0]: 0, denormal numbers
 		 * 23tr bit of a[0]: 1
-		 * 0th bit of a[1]: 1*64 - 23 = 41
-		 * 0th bit of a[2]: 2*64 - 23 = 105
-		 * 0th bit of a[3]: 3*64 - 23 = 169
-		 * 0th bit of a[4]: 4*64 - 23 = 233
-		 * 21st bit of a[4]: 254
+		 * 0th bit of a[1]: 1*64 - 22 = 42
+		 * 0th bit of a[2]: 2*64 - 22 = 106
+		 * 0th bit of a[3]: 3*64 - 22 = 170
+		 * 0th bit of a[4]: 4*64 - 22 = 234
+		 * 21st bit of a[4]: 255
 		 * 22nd bit of a[4]: infinity
 		 */
 		uint64_t a[5];
@@ -196,7 +196,7 @@ namespace fix_acc {
 			asgn(f);
 		}
 
-		fasp& operator=(float f) {
+		fasp& operator=(float f) {			//!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 			asgn(f);
 			return *this;
 		}
@@ -438,10 +438,10 @@ namespace fix_acc {
 				a[4] = 0;
 			}else{
 				fu.fields.exponent -= 1;
-				uint8_t a_index = fu.fields.exponent >> 6;
-				uint8_t shift = fu.fields.exponent & 0x3f;
+				uint8_t a_index = fu.fields.exponent >> 6;				//index are first two bits
+				uint8_t shift = fu.fields.exponent & 0x3f;				//exponent: take the first 6 bits
 				uint128_t_union iu;
-				iu.i64[0] = uint32_t(fu.fields.mantisa) | 0x800000;
+				iu.i64[0] = uint32_t(fu.fields.mantisa) | 0x800000;		//adding hidden one
 				iu.i64[1] = 0;
 				iu.i128 <<= shift;
 				switch(a_index){
@@ -472,13 +472,6 @@ namespace fix_acc {
 						a[2] = 0;
 						a[3] = iu.i64[0];
 						a[4] = iu.i64[1];
-						break;
-					case 4:
-						a[0] = 0;
-						a[1] = 0;
-						a[2] = 0;
-						a[3] = 0;
-						a[4] = iu.i64[0];
 						break;
 				}
 			}
@@ -525,9 +518,8 @@ namespace fix_acc {
 
 				old = a[4];
 				a[4] += carry;
-				carry = a[4] < old;
 			}else{
-				fu.fields.exponent -= 1;
+				fu.fields.exponent -= 1;			
 				uint8_t a_index = fu.fields.exponent >> 6;
 				uint8_t shift = fu.fields.exponent & 0x3f;
 				uint128_t_union iu;
@@ -536,39 +528,76 @@ namespace fix_acc {
 				iu.i128 <<= shift;
 				switch(a_index){
 					case 0:
+						old = a[0]; 
 						a[0] += iu.i64[0];
-						a[1] = iu.i64[1] + (iu.i64[0] > a[0]);
-						a[2] = 0;
-						a[3] = 0;
-						a[4] = 0;
+						carry = a[0] < old;
+						
+						old = a[1];
+						a[1] += iu.i64[1] + carry;
+						carry = a[1] < old;
+						
+						old = a[2];
+						a[2] += carry;
+						carry = a[2] < old;
+						
+						old = a[3];
+						a[3] += carry;
+						carry = a[3] < old;
+						
+						old = a[4];
+						a[4] += carry;
+					
 						break;
 					case 1:
 						a[0] = 0;
-						a[1] = iu.i64[0];
-						a[2] = iu.i64[1];
-						a[3] = 0;
-						a[4] = 0;
+						
+						old = a[1];
+						a[1] += iu.i64[0];
+						carry = a[1] < old;
+						
+						old = a[2]; 
+						a[2] += iu.i64[1] + carry;
+						carry = a[2] < old; 
+						
+						old = a[3]; 
+						a[3] += carry;
+						carry = a[3] < old;
+						
+						old = a[4]; 
+						a[4] += carry;
+						
 						break;
 					case 2:
 						a[0] = 0;
+						
 						a[1] = 0;
-						a[2] = iu.i64[0];
-						a[3] = iu.i64[1];
-						a[4] = 0;
+						
+						old = a[2]; 
+						a[2] += iu.i64[0];
+						carry = a[2] < old; 
+						
+						old = a[3]; 
+						a[3] += iu.i64[1] + carry;
+						carry = a[3] < old; 
+						
+						old = a[4];
+						a[4] += carry;
+						
 						break;
 					case 3:
 						a[0] = 0;
+						
 						a[1] = 0;
+						
 						a[2] = 0;
-						a[3] = iu.i64[0];
-						a[4] = iu.i64[1];
-						break;
-					case 4:
-						a[0] = 0;
-						a[1] = 0;
-						a[2] = 0;
-						a[3] = 0;
-						a[4] = iu.i64[0];
+						
+						old = a[3]; 
+						a[3] += iu.i64[0];
+						carry = a[3] < old; 
+						
+						old = a[4]; 
+						a[4] += iu.i64[1] + carry;
+						
 						break;
 				}
 			}
@@ -576,7 +605,7 @@ namespace fix_acc {
 #endif
 		}
 
-		inline void sub_asgn(float f) {
+		inline void sub_asgn(float f) {			//????????????????????????
 
 		}
 
