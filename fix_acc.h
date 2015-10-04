@@ -399,7 +399,7 @@ namespace fix_acc {
 #endif // __x86_64__
 		}
 
-		fasp& operator+=(float f) {
+		inline fasp& operator+=(float f) {
 			if(f < 0){
 				sub_asgn(-f);
 			}else{
@@ -408,7 +408,7 @@ namespace fix_acc {
 			return *this;
 		}
 
-		fasp& operator-=(float f) {
+		inline fasp& operator-=(float f) {
 			if(f < 0){
 				add_asgn(-f);
 			}else{
@@ -522,10 +522,14 @@ namespace fix_acc {
 				fu.fields.exponent -= 1;
 				uint8_t a_index = fu.fields.exponent >> 6;
 				uint8_t shift = fu.fields.exponent & 0x3f;
+
+#if 1
+
 				uint128_t_union iu;
 				iu.i64[0] = uint32_t(fu.fields.mantisa) | 0x800000;
 				iu.i64[1] = 0;
 				iu.i128 <<= shift;
+
 				switch(a_index){
 					case 0:
 						old = a[0];
@@ -600,12 +604,148 @@ namespace fix_acc {
 
 						break;
 				}
+
+#elif 1
+				// Nothing faster than the switch.
+
+				uint64_t m = uint32_t(fu.fields.mantisa) | 0x800000;
+				uint64_t u = 0;
+				uint64_t j = a_index << 2; // *4
+
+				asm(
+						// TODO Not quite working to direct asign to cl in input list.
+						"	mov  %8, %%cl                   \n"
+
+						"   lea   jmp_table(%7, %7, 4), %7  \n" // *5.
+						"	shld  %%cl, %5, %6              \n"
+						"	shl   %%cl, %5                  \n"
+						"   jmpq  *%7                       \n"
+						"jmp_table:                         \n"
+						"case_0:                            \n"
+						"	add   %5, %0                    \n"
+						"	xor   %5, %5                    \n"
+						"	adc   %6, %1                    \n"
+						"	adc   %5, %2                    \n"
+						"	adc   %5, %3                    \n"
+						"	adc   %5, %4                    \n"
+						"	jmp   end                       \n"
+						"case_1:                            \n"
+						"	add   %5, %1                    \n"
+						"	xor   %5, %5                    \n"
+						"	adc   %6, %2                    \n"
+						"	adc   %5, %3                    \n"
+						"	adc   %5, %4                    \n"
+						"	jmp   end                       \n"
+						"   nop                             \n"
+						"end:                        \n"
+						// TODO Rest of cases.
+						: "+r"(a[0]), "+r"(a[1]), "+r"(a[2]),
+						  	  "+r"(a[3]), "+r"(a[4])
+						: "r"(m), "r"(u), "r"(j), "cl"(shift)
+						: "cl", "cc"
+				);
+
+#else
+				// Nothing faster than the switch.
+
+				uint128_t_union iu;
+				iu.i64[0] = uint32_t(fu.fields.mantisa) | 0x800000;
+				iu.i64[1] = 0;
+				iu.i128 <<= shift;
+
+				static void* table[4] = {
+					&&case_0,
+					&&case_1,
+					&&case_2,
+					&&case_3
+				};
+
+				goto *table[a_index];
+
+				case_0:
+						old = a[0];
+						a[0] += iu.i64[0];
+						carry = a[0] < old;
+
+						old = a[1];
+						a[1] += iu.i64[1] + carry;
+						carry = a[1] < old;
+
+						old = a[2];
+						a[2] += carry;
+						carry = a[2] < old;
+
+						old = a[3];
+						a[3] += carry;
+						carry = a[3] < old;
+
+						old = a[4];
+						a[4] += carry;
+
+						goto end;
+
+					case_1:
+						a[0] = 0;
+
+						old = a[1];
+						a[1] += iu.i64[0];
+						carry = a[1] < old;
+
+						old = a[2];
+						a[2] += iu.i64[1] + carry;
+						carry = a[2] < old;
+
+						old = a[3];
+						a[3] += carry;
+						carry = a[3] < old;
+
+						old = a[4];
+						a[4] += carry;
+
+						goto end;
+
+					case_2:
+						a[0] = 0;
+
+						a[1] = 0;
+
+						old = a[2];
+						a[2] += iu.i64[0];
+						carry = a[2] < old;
+
+						old = a[3];
+						a[3] += iu.i64[1] + carry;
+						carry = a[3] < old;
+
+						old = a[4];
+						a[4] += carry;
+
+						goto end;
+
+					case_3:
+						a[0] = 0;
+
+						a[1] = 0;
+
+						a[2] = 0;
+
+						old = a[3];
+						a[3] += iu.i64[0];
+						carry = a[3] < old;
+
+						old = a[4];
+						a[4] += iu.i64[1] + carry;
+
+				end:
+				;
+
+#endif
 			}
 
 #endif
 		}
 
-		inline void sub_asgn(float f) {			//????????????????????????
+		inline void sub_asgn(float f) {
 
 		}
 
