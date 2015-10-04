@@ -16,12 +16,13 @@
 #include <cassert>
 #include <vector>
 #include <iomanip>
+#include <cmath>
 
 ///////////////////////////////////////////////////////////////////////////////
 
 #define ENABLE_LOGGING 0
 #define ENABLE_MESUREMENT 1
-#define TIME_MEASUREMENT_ITERS 10
+#define TIME_MEASUREMENT_ITERS 1
 
 #define LARGEST_EXPONENT 254
 #define LARGEST_MANTISA 0x7fffff
@@ -56,9 +57,9 @@ void check_float_2_fasp_and_back(float f0){
 }
 
 template<typename T>
-T ordinary_sum(std::vector<T> to_sum) {
+T ordinary_sum(std::vector<T> fv) {
 	T acc = 0;
-	for(auto iter = to_sum.begin(); iter != to_sum.end(); iter++){
+	for(auto iter = fv.begin(); iter != fv.end(); iter++){
 		acc += *iter;
 	}
 	return acc;
@@ -66,10 +67,10 @@ T ordinary_sum(std::vector<T> to_sum) {
 
 // Implementation of Kahan
 template<typename T>
-T kahan_sum(std::vector<T> for_sum) {
+T kahan_sum(std::vector<T> fv) {
 	T sum = 0.0;
 	T c = 0.0;
-	for(auto iter = for_sum.begin(); iter != for_sum.end(); iter++) {
+	for(auto iter = fv.begin(); iter != fv.end(); iter++){
 		T y = *iter - c;
 
 		T t = sum + y;
@@ -79,9 +80,59 @@ T kahan_sum(std::vector<T> for_sum) {
 	return sum;
 }
 
-float fix_acc_sum(std::vector<float> f) {
+float cascade_acc_sum(const std::vector<float>& fv) {
+	/* IN ORDER TO EXTRACT THE EXPONENT OF THE FLOATING POINT NUMBERS,
+	 WE PRETEND THAT THEY ARE INTEGERS                                 */
+	union intorfloat {
+		int ier;
+		float w;
+	} ierw;
+	float sum_float;
+	double r[64], /* DOUBLE PRECISION CASCADING ACCUMULATORS         */
+	sum_double, /* THE SUM OF ALL THE ACCUMULATORS                 */
+	doublex, /* DOUBLE PRECISION VERSION OF NUMBER BEING ADDED  */
+	delta; /* FINAL CORRECTION TERM                           */
+	int iexp, /* EXPONENT OF THE FLOATING POINT NUMBER           */
+	i; /* INDEX OF LOOPS                                  */
+	/* SET THE ACCUMULATORS TO ZERO                                       */
+	for(i = 0; i < 64; i++)
+		r[i] = 0.0;
+	/* LOOP TO PROCESS ALL THE NUMBERS                                    */
+	for(auto iter = fv.begin(); iter != fv.end(); iter++){
+		/* REMOVE THE SIGN BIT                                                */
+		ierw.w = fabs(*iter);
+		/* SHIFT THE NUMBER, REGARDED AS AN INTEGER, 23 PLACES RIGHT TO       */
+		/*   REMOVE THE MANTISSA AND LEAVE THE EXPONENT AT RIGHT OF 32-BIT    */
+		/*   FIELD. THEN DIVIDE BY 4 (SHIFT RIGHT 2 PLACES) AS THERE WILL BE  */
+		/*   4 CONSECUTIVE EXPONENTS SHARING 1 ACCUMULATOR                    */
+		iexp = ierw.ier >> 25;
+		/* ADD THE ORIGINAL NUMBER TO THE APPROPRIATE ACCUMULATOR             */
+		doublex = (double) *iter;
+		r[iexp] += doublex;
+	} /* END LOOP ON NUMBERS                                              */
+	/* ADD THE ACCUMULATORS IN DECREASING ORDER                           */
+	sum_double = 0.0;
+	for(i = 0; i < 64; i++)
+		sum_double += r[63 - i];
+	sum_float = (float) sum_double;
+	/* FIND THE EXPONENT OF THE SUM, READY FOR CORRECTION                 */
+	ierw.w = fabs(sum_float);
+	iexp = ierw.ier >> 25;
+	/* SUBTRACT THE DOUBLE SUM FROM APPROPRIATE ACCUMULATOR               */
+	r[iexp] -= sum_double;
+	/* ADD ALL THE ACCUMULATORS (INCLUDING THE MODIFIED ONE)              */
+	delta = 0.0;
+	for(i = 0; i < 64; i++)
+		delta += r[63 - i];
+	/* ADD THE CORRECTION TO THE SUM                                      */
+	sum_double += delta;
+	/* EXIT THE SUM FUNCTION, RETURNING THE SUM IN SINGLE PRECISION       */
+	return ((float) sum_double);
+}
+
+float fix_acc_sum(const std::vector<float>& fv) {
 	fix_acc::fasp acc(0.0);
-	for(auto iter = f.begin(); iter != f.end(); iter++) {
+	for(auto iter = fv.begin(); iter != fv.end(); iter++){
 		acc += *iter;
 	}
 
@@ -111,7 +162,8 @@ void test_problem() {
 	large_and_smalls[0] = large;
 
 	// Aditional problem
-	std::vector<float> large_and_smalls_and_tinies(1 + num_smalls_in_large + 4*num_tinies_in_smalls, tiny);
+	std::vector<float> large_and_smalls_and_tinies(
+			1 + num_smalls_in_large + 4*num_tinies_in_smalls, tiny);
 	large_and_smalls_and_tinies[0] = large;
 	for(int i = 1; i < 1 + num_smalls_in_large; i++) {
 		large_and_smalls_and_tinies[i] = small;
@@ -126,11 +178,16 @@ void test_problem() {
 	DEBUG(kahan_sum(large_and_smalls));
 	DEBUG(kahan_sum(large_and_smalls_and_tinies));
 
+	DEBUG(cascade_acc_sum(smalls_and_large));
+	DEBUG(cascade_acc_sum(large_and_smalls));
+	DEBUG(cascade_acc_sum(large_and_smalls_and_tinies));
+
 	DEBUG(fix_acc_sum(smalls_and_large));
 	DEBUG(fix_acc_sum(large_and_smalls));
 	DEBUG(fix_acc_sum(large_and_smalls_and_tinies));
 #endif
 
+#if 1
 	assert(ordinary_sum(smalls_and_large) == 2.0);
 	assert(ordinary_sum(large_and_smalls) == 1.0);
 	assert(ordinary_sum(large_and_smalls_and_tinies) == 1.0);
@@ -139,9 +196,14 @@ void test_problem() {
 	assert(kahan_sum(large_and_smalls) == 2.0);
 	assert(kahan_sum(large_and_smalls_and_tinies) == 2.0);
 
+	assert(cascade_acc_sum(smalls_and_large) == 2.0);
+	assert(cascade_acc_sum(large_and_smalls) == 2.0);
+	assert(cascade_acc_sum(large_and_smalls_and_tinies) == 2.0 + 4*small);
+
 	assert(fix_acc_sum(smalls_and_large) == 2.0);
 	assert(fix_acc_sum(large_and_smalls) == 2.0);
 	assert(fix_acc_sum(large_and_smalls_and_tinies) == 2.0 + 4*small);
+#endif
 
 #if ENABLE_MESUREMENT
 
@@ -163,6 +225,7 @@ void test_problem() {
 	}
 	PRINT_MEASURED_TIME(ordinary_sum_large_and_smalls_and_tinies_time);
 
+
 	TimeMeasure kahan_sum_smalls_and_large_time;
 	for(int i = 0; i < TIME_MEASUREMENT_ITERS; i++){
 		assert(kahan_sum(smalls_and_large) == 2.0);
@@ -180,6 +243,26 @@ void test_problem() {
 		assert(kahan_sum(large_and_smalls_and_tinies) == 2.0);
 	}
 	PRINT_MEASURED_TIME(kahan_sum_large_and_smalls_and_tinies_time);
+
+
+	TimeMeasure cascade_acc_sum_smalls_and_large_time;
+	for(int i = 0; i < TIME_MEASUREMENT_ITERS; i++){
+		assert(cascade_acc_sum(smalls_and_large) == 2.0);
+	}
+	PRINT_MEASURED_TIME(cascade_acc_sum_smalls_and_large_time);
+
+	TimeMeasure cascade_acc_sum_large_and_smalls_time;
+	for(int i = 0; i < TIME_MEASUREMENT_ITERS; i++){
+		assert(cascade_acc_sum(large_and_smalls) == 2.0);
+	}
+	PRINT_MEASURED_TIME(cascade_acc_sum_large_and_smalls_time);
+
+	TimeMeasure cascade_acc_sum_large_and_smalls_and_tinies_time;
+	for(int i = 0; i < TIME_MEASUREMENT_ITERS; i++){
+		assert(cascade_acc_sum(large_and_smalls_and_tinies) == 2.0 + 4*small);
+	}
+	PRINT_MEASURED_TIME(cascade_acc_sum_large_and_smalls_and_tinies_time);
+
 
 	TimeMeasure fix_acc_sum_smalls_and_large_time;
 	for(int i = 0; i < TIME_MEASUREMENT_ITERS; i++){
