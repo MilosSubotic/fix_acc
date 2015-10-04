@@ -519,7 +519,7 @@ namespace fix_acc {
 				old = a[4];
 				a[4] += carry;
 			}else{
-				fu.fields.exponent -= 1;			
+				fu.fields.exponent -= 1;
 				uint8_t a_index = fu.fields.exponent >> 6;
 				uint8_t shift = fu.fields.exponent & 0x3f;
 				uint128_t_union iu;
@@ -528,76 +528,76 @@ namespace fix_acc {
 				iu.i128 <<= shift;
 				switch(a_index){
 					case 0:
-						old = a[0]; 
+						old = a[0];
 						a[0] += iu.i64[0];
 						carry = a[0] < old;
-						
+
 						old = a[1];
 						a[1] += iu.i64[1] + carry;
 						carry = a[1] < old;
-						
+
 						old = a[2];
 						a[2] += carry;
 						carry = a[2] < old;
-						
+
 						old = a[3];
 						a[3] += carry;
 						carry = a[3] < old;
-						
+
 						old = a[4];
 						a[4] += carry;
-					
+
 						break;
 					case 1:
 						a[0] = 0;
-						
+
 						old = a[1];
 						a[1] += iu.i64[0];
 						carry = a[1] < old;
-						
-						old = a[2]; 
+
+						old = a[2];
 						a[2] += iu.i64[1] + carry;
-						carry = a[2] < old; 
-						
-						old = a[3]; 
+						carry = a[2] < old;
+
+						old = a[3];
 						a[3] += carry;
 						carry = a[3] < old;
-						
-						old = a[4]; 
+
+						old = a[4];
 						a[4] += carry;
-						
+
 						break;
 					case 2:
 						a[0] = 0;
-						
+
 						a[1] = 0;
-						
-						old = a[2]; 
+
+						old = a[2];
 						a[2] += iu.i64[0];
-						carry = a[2] < old; 
-						
-						old = a[3]; 
+						carry = a[2] < old;
+
+						old = a[3];
 						a[3] += iu.i64[1] + carry;
-						carry = a[3] < old; 
-						
+						carry = a[3] < old;
+
 						old = a[4];
 						a[4] += carry;
-						
+
 						break;
 					case 3:
 						a[0] = 0;
-						
+
 						a[1] = 0;
-						
+
 						a[2] = 0;
-						
-						old = a[3]; 
+
+						old = a[3];
 						a[3] += iu.i64[0];
-						carry = a[3] < old; 
-						
-						old = a[4]; 
+						carry = a[3] < old;
+
+						old = a[4];
 						a[4] += iu.i64[1] + carry;
-						
+
 						break;
 				}
 			}
