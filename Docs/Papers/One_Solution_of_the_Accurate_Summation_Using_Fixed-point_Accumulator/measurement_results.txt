@@ -1,0 +1,26 @@
+void test_problem() ordinary_sum_smalls_and_large_time = 0.07073598900024080649
+void test_problem() ordinary_sum_large_and_smalls_time = 0.07246390300133498386
+void test_problem() ordinary_sum_large_and_smalls_and_tinies_time = 0.34099177600000984967
+void test_problem() kahan_sum_smalls_and_large_time = 0.12705294399347621948
+void test_problem() kahan_sum_large_and_smalls_time = 0.12611515299795428291
+void test_problem() kahan_sum_large_and_smalls_and_tinies_time = 0.61916170800395775586
+void test_problem() cascade_acc_sum_smalls_and_large_time = 0.06920230299874674529
+void test_problem() cascade_acc_sum_large_and_smalls_time = 0.07002203699812525883
+void test_problem() cascade_acc_sum_large_and_smalls_and_tinies_time = 0.35196839799755252898
+void test_problem() fix_acc_sum_smalls_and_large_time = 0.11795083000470185652
+void test_problem() fix_acc_sum_large_and_smalls_time = 0.11982011199870612472
+void test_problem() fix_acc_sum_large_and_smalls_and_tinies_time = 0.58980168500420404598
+
+void test_problem() ordinary_sum_smalls_and_large_time = 7.19447108799795387313
+void test_problem() ordinary_sum_large_and_smalls_time = 7.25757868800428695977
+void test_problem() ordinary_sum_large_and_smalls_and_tinies_time = 34.30128156400314765051
+void test_problem() kahan_sum_smalls_and_large_time = 12.70433675900130765513
+void test_problem() kahan_sum_large_and_smalls_time = 12.68512803500198060647
+void test_problem() kahan_sum_large_and_smalls_and_tinies_time = 62.32010469199303770438
+void test_problem() cascade_acc_sum_smalls_and_large_time = 7.00833368200255790725
+void test_problem() cascade_acc_sum_large_and_smalls_time = 6.97730181299994001165
+void test_problem() cascade_acc_sum_large_and_smalls_and_tinies_time = 34.92952873900503618643
+void test_problem() fix_acc_sum_smalls_and_large_time = 11.69018056899949442595
+void test_problem() fix_acc_sum_large_and_smalls_time = 11.69988979500340064988
+void test_problem() fix_acc_sum_large_and_smalls_and_tinies_time = 58.53005913900415180251
+
