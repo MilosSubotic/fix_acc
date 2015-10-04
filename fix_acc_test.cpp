@@ -11,13 +11,17 @@
 
 #include "fix_acc_test.h"
 
+#include "TimeMeasure.h"
+
 #include <cassert>
 #include <vector>
 #include <iomanip>
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#define ENABLE_LOGGING 1
+#define ENABLE_LOGGING 0
+#define ENABLE_MESUREMENT 1
+#define CONSTANT 100
 
 #define BIGGEST_EXPONENT 254
 #define BIGGEST_MANTISA 0x7fffff
@@ -138,6 +142,64 @@ void test_problem() {
 	assert(fix_acc_sum(smalls_and_big) == 2.0);
 	assert(fix_acc_sum(big_and_smalls) == 2.0);
 	assert(fix_acc_sum(big_and_smalls_and_tinies) == 2.0 + 4*small);
+	
+#if ENABLE_MESUREMENT
+
+	TimeMeasure ordinary_sum_time1;							
+	for(int i = 0; i < CONSTANT; i++){
+		assert(ordinary_sum(smalls_and_big) == 2.0);
+	}
+	PRINT_MEASURED_TIME(ordinary_sum_time1);
+	
+	TimeMeasure ordinary_sum_time2;
+	for(int i = 0; i < CONSTANT; i++){
+		assert(ordinary_sum(big_and_smalls) == 1.0);
+	}
+	PRINT_MEASURED_TIME(ordinary_sum_time2);
+	
+	TimeMeasure ordinary_sum_time3;
+	for(int i = 0; i < CONSTANT; i++){
+		assert(ordinary_sum(big_and_smalls_and_tinies) == 1.0);
+	}
+	PRINT_MEASURED_TIME(ordinary_sum_time3);
+	
+	TimeMeasure ordinary_sum_time4;
+	for(int i = 0; i < CONSTANT; i++){
+		assert(kahan_sum(smalls_and_big) == 2.0);
+	}
+	PRINT_MEASURED_TIME(ordinary_sum_time4);
+	
+	TimeMeasure ordinary_sum_time5;
+	for(int i = 0; i < CONSTANT; i++){
+		assert(kahan_sum(big_and_smalls) == 2.0);
+	}
+	PRINT_MEASURED_TIME(ordinary_sum_time5);
+	
+	TimeMeasure ordinary_sum_time6;
+	for(int i = 0; i < CONSTANT; i++){
+		assert(kahan_sum(big_and_smalls_and_tinies) == 2.0);
+	}
+	PRINT_MEASURED_TIME(ordinary_sum_time6);
+	
+	TimeMeasure ordinary_sum_time7;
+	for(int i = 0; i < CONSTANT; i++){	
+		assert(fix_acc_sum(smalls_and_big) == 2.0);
+	}
+	PRINT_MEASURED_TIME(ordinary_sum_time7);
+	
+	TimeMeasure ordinary_sum_time8;
+	for(int i = 0; i < CONSTANT; i++){
+		assert(fix_acc_sum(big_and_smalls) == 2.0);
+	}
+	PRINT_MEASURED_TIME(ordinary_sum_time8);
+	
+	TimeMeasure ordinary_sum_time9;
+	for(int i = 0; i < CONSTANT; i++){
+		assert(fix_acc_sum(big_and_smalls_and_tinies) == 2.0 + 4*small);
+	}
+	PRINT_MEASURED_TIME(ordinary_sum_time9);
+	
+#endif
 }
 
 void test_constructors_and_conversion() {
