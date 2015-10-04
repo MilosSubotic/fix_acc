@@ -149,11 +149,6 @@ void test_problem() {
     const int num_smalls_in_large = 1 << 24;
     const int num_tinies_in_smalls = 1 << 24;
 
-	std::vector<float> many_smalls((1 << 24) + 1);
-	for(auto iter = many_smalls.begin(); iter != many_smalls.end(); iter++){
-		*iter = small;
-	}
-
 	std::vector<float> smalls_and_large(num_smalls_in_large + 1, small);
 	smalls_and_large[smalls_and_large.size()-1] = large;
 
