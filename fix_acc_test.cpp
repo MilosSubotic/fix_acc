@@ -23,8 +23,8 @@
 #define ENABLE_MESUREMENT 1
 #define CONSTANT 100
 
-#define BIGGEST_EXPONENT 254
-#define BIGGEST_MANTISA 0x7fffff
+#define LARGEST_EXPONENT 254
+#define LARGEST_MANTISA 0x7fffff
 //#define DEBUG(x) do{ std::cout << #x << " = " << x << std::endl; }while(0)
 
 inline float fields_to_float(
@@ -65,7 +65,7 @@ T ordinary_sum(std::vector<T> to_sum) {
 }
 
 // Implementation of Kahan
-template<typename T> 
+template<typename T>
 T kahan_sum(std::vector<T> for_sum) {
 	T sum = 0.0;
 	T c = 0.0;
@@ -78,24 +78,24 @@ T kahan_sum(std::vector<T> for_sum) {
 	}
 	return sum;
 }
- 
+
 float fix_acc_sum(std::vector<float> f) {
 	fix_acc::fasp acc(0.0);
 	for(auto iter = f.begin(); iter != f.end(); iter++) {
 		acc += *iter;
 	}
-	
+
 	return float(acc);
 }
 
 
 void test_problem() {
-	// One big many smalls problem.
-	float big = fields_to_float(0, 127, 0);
+	// One large many smalls problem.
+	float large = fields_to_float(0, 127, 0);
 	float small = fields_to_float(0, 127-24, 0);
 	float tiny = fields_to_float(0, 127-48, 0);
 
-    const int num_smalls_in_big = 1 << 24;
+    const int num_smalls_in_large = 1 << 24;
     const int num_tinies_in_smalls = 1 << 24;
 
 	std::vector<float> many_smalls((1 << 24) + 1);
@@ -103,102 +103,102 @@ void test_problem() {
 		*iter = small;
 	}
 
-	std::vector<float> smalls_and_big(num_smalls_in_big + 1, small);
-	smalls_and_big[smalls_and_big.size()-1] = big;
+	std::vector<float> smalls_and_large(num_smalls_in_large + 1, small);
+	smalls_and_large[smalls_and_large.size()-1] = large;
 
-	// Because small is less that big's epsilon adding doesn't work.
-	std::vector<float> big_and_smalls(1 + num_smalls_in_big, small);
-	big_and_smalls[0] = big;
+	// Because small is less that large's epsilon adding doesn't work.
+	std::vector<float> large_and_smalls(1 + num_smalls_in_large, small);
+	large_and_smalls[0] = large;
 
-	// Aditional problem       
-	std::vector<float> big_and_smalls_and_tinies(1 + num_smalls_in_big + 4*num_tinies_in_smalls, tiny);
-	big_and_smalls_and_tinies[0] = big;
-	for(int i = 1; i < 1 + num_smalls_in_big; i++) {
-		big_and_smalls_and_tinies[i] = small;
+	// Aditional problem
+	std::vector<float> large_and_smalls_and_tinies(1 + num_smalls_in_large + 4*num_tinies_in_smalls, tiny);
+	large_and_smalls_and_tinies[0] = large;
+	for(int i = 1; i < 1 + num_smalls_in_large; i++) {
+		large_and_smalls_and_tinies[i] = small;
 	}
 
 #if ENABLE_LOGGING
-    DEBUG(ordinary_sum(smalls_and_big));
-	DEBUG(ordinary_sum(big_and_smalls));
-	DEBUG(ordinary_sum(big_and_smalls_and_tinies));
-	
-	DEBUG(kahan_sum(smalls_and_big));
-	DEBUG(kahan_sum(big_and_smalls));
-	DEBUG(kahan_sum(big_and_smalls_and_tinies));
-	
-	DEBUG(fix_acc_sum(smalls_and_big));
-	DEBUG(fix_acc_sum(big_and_smalls));
-	DEBUG(fix_acc_sum(big_and_smalls_and_tinies));	
+    DEBUG(ordinary_sum(smalls_and_large));
+	DEBUG(ordinary_sum(large_and_smalls));
+	DEBUG(ordinary_sum(large_and_smalls_and_tinies));
+
+	DEBUG(kahan_sum(smalls_and_large));
+	DEBUG(kahan_sum(large_and_smalls));
+	DEBUG(kahan_sum(large_and_smalls_and_tinies));
+
+	DEBUG(fix_acc_sum(smalls_and_large));
+	DEBUG(fix_acc_sum(large_and_smalls));
+	DEBUG(fix_acc_sum(large_and_smalls_and_tinies));
 #endif
 
-	assert(ordinary_sum(smalls_and_big) == 2.0);
-	assert(ordinary_sum(big_and_smalls) == 1.0);
-	assert(ordinary_sum(big_and_smalls_and_tinies) == 1.0);
+	assert(ordinary_sum(smalls_and_large) == 2.0);
+	assert(ordinary_sum(large_and_smalls) == 1.0);
+	assert(ordinary_sum(large_and_smalls_and_tinies) == 1.0);
 
-	assert(kahan_sum(smalls_and_big) == 2.0);
-	assert(kahan_sum(big_and_smalls) == 2.0);
-	assert(kahan_sum(big_and_smalls_and_tinies) == 2.0);
+	assert(kahan_sum(smalls_and_large) == 2.0);
+	assert(kahan_sum(large_and_smalls) == 2.0);
+	assert(kahan_sum(large_and_smalls_and_tinies) == 2.0);
 
-	assert(fix_acc_sum(smalls_and_big) == 2.0);
-	assert(fix_acc_sum(big_and_smalls) == 2.0);
-	assert(fix_acc_sum(big_and_smalls_and_tinies) == 2.0 + 4*small);
-	
+	assert(fix_acc_sum(smalls_and_large) == 2.0);
+	assert(fix_acc_sum(large_and_smalls) == 2.0);
+	assert(fix_acc_sum(large_and_smalls_and_tinies) == 2.0 + 4*small);
+
 #if ENABLE_MESUREMENT
 
-	TimeMeasure ordinary_sum_time1;							
+	TimeMeasure ordinary_sum_time1;
 	for(int i = 0; i < CONSTANT; i++){
-		assert(ordinary_sum(smalls_and_big) == 2.0);
+		assert(ordinary_sum(smalls_and_large) == 2.0);
 	}
 	PRINT_MEASURED_TIME(ordinary_sum_time1);
-	
+
 	TimeMeasure ordinary_sum_time2;
 	for(int i = 0; i < CONSTANT; i++){
-		assert(ordinary_sum(big_and_smalls) == 1.0);
+		assert(ordinary_sum(large_and_smalls) == 1.0);
 	}
 	PRINT_MEASURED_TIME(ordinary_sum_time2);
-	
+
 	TimeMeasure ordinary_sum_time3;
 	for(int i = 0; i < CONSTANT; i++){
-		assert(ordinary_sum(big_and_smalls_and_tinies) == 1.0);
+		assert(ordinary_sum(large_and_smalls_and_tinies) == 1.0);
 	}
 	PRINT_MEASURED_TIME(ordinary_sum_time3);
-	
+
 	TimeMeasure ordinary_sum_time4;
 	for(int i = 0; i < CONSTANT; i++){
-		assert(kahan_sum(smalls_and_big) == 2.0);
+		assert(kahan_sum(smalls_and_large) == 2.0);
 	}
 	PRINT_MEASURED_TIME(ordinary_sum_time4);
-	
+
 	TimeMeasure ordinary_sum_time5;
 	for(int i = 0; i < CONSTANT; i++){
-		assert(kahan_sum(big_and_smalls) == 2.0);
+		assert(kahan_sum(large_and_smalls) == 2.0);
 	}
 	PRINT_MEASURED_TIME(ordinary_sum_time5);
-	
+
 	TimeMeasure ordinary_sum_time6;
 	for(int i = 0; i < CONSTANT; i++){
-		assert(kahan_sum(big_and_smalls_and_tinies) == 2.0);
+		assert(kahan_sum(large_and_smalls_and_tinies) == 2.0);
 	}
 	PRINT_MEASURED_TIME(ordinary_sum_time6);
-	
+
 	TimeMeasure ordinary_sum_time7;
-	for(int i = 0; i < CONSTANT; i++){	
-		assert(fix_acc_sum(smalls_and_big) == 2.0);
+	for(int i = 0; i < CONSTANT; i++){
+		assert(fix_acc_sum(smalls_and_large) == 2.0);
 	}
 	PRINT_MEASURED_TIME(ordinary_sum_time7);
-	
+
 	TimeMeasure ordinary_sum_time8;
 	for(int i = 0; i < CONSTANT; i++){
-		assert(fix_acc_sum(big_and_smalls) == 2.0);
+		assert(fix_acc_sum(large_and_smalls) == 2.0);
 	}
 	PRINT_MEASURED_TIME(ordinary_sum_time8);
-	
+
 	TimeMeasure ordinary_sum_time9;
 	for(int i = 0; i < CONSTANT; i++){
-		assert(fix_acc_sum(big_and_smalls_and_tinies) == 2.0 + 4*small);
+		assert(fix_acc_sum(large_and_smalls_and_tinies) == 2.0 + 4*small);
 	}
 	PRINT_MEASURED_TIME(ordinary_sum_time9);
-	
+
 #endif
 }
 
@@ -214,8 +214,8 @@ void test_constructors_and_conversion() {
 	float next_to_zero = fields_to_float(0, 0, 1);
 	check_float_2_fasp_and_back(next_to_zero);
 
-	float biggest_denormal = fields_to_float(0, 0, BIGGEST_MANTISA);
-	check_float_2_fasp_and_back(biggest_denormal);
+	float largest_denormal = fields_to_float(0, 0, LARGEST_MANTISA);
+	check_float_2_fasp_and_back(largest_denormal);
 
 	float smallest_normal = fields_to_float(0, 1, 0);
 	check_float_2_fasp_and_back(smallest_normal);
@@ -228,21 +228,21 @@ void test_constructors_and_conversion() {
 
 
 	// Highest bit in a[4].
-	float biggest_normal = fields_to_float(
+	float largest_normal = fields_to_float(
 			0,
-			BIGGEST_EXPONENT,
-			BIGGEST_MANTISA);
-	check_float_2_fasp_and_back(biggest_normal);
+			LARGEST_EXPONENT,
+			LARGEST_MANTISA);
+	check_float_2_fasp_and_back(largest_normal);
 
 	float infinity = fields_to_float(
 			0,
-			BIGGEST_EXPONENT + 1,
+			LARGEST_EXPONENT + 1,
 			0);
 	check_float_2_fasp_and_back(infinity);
 
-	for(uint32_t e = 0; e < BIGGEST_EXPONENT + 1; e++){
+	for(uint32_t e = 0; e < LARGEST_EXPONENT + 1; e++){
 		DEBUG(e);
-		for(uint32_t m = 0; m < BIGGEST_MANTISA; m++){
+		for(uint32_t m = 0; m < LARGEST_MANTISA; m++){
 			check_float_2_fasp_and_back(fields_to_float(0, e, m));
 		}
 	}
@@ -266,7 +266,7 @@ void test_addition_assignment() {
 	assert(float(acc) == 10*next_to_zero);
 
 	// De-normal add carry.
-	acc = fields_to_float(0, 41, BIGGEST_MANTISA);
+	acc = fields_to_float(0, 41, LARGEST_MANTISA);
 	float a = fields_to_float(0, 0, 0x400000);
 	for(int i = 0; i < (1 << 18); i++){
 		acc += a;
@@ -336,7 +336,7 @@ void fix_acc_test(){
 	test_addition_assignment();
 	test1();
 	test2();
-#endif	
+#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////
