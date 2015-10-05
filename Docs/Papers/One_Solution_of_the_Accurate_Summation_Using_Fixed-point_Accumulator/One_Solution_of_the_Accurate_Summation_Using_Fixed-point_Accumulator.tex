@@ -320,26 +320,27 @@ Algorithm is implemented in C++.
 Several authors have used variety of methods for floating-point 
 summation to find out which methods achieve the best accuracy. 
 \par
-The first algorithm is Kahan's method \cite{ComparisonOfMethods}. 
-His compensated summation method employs the correction 
-on every step of a recursive summation. After each partial 
-sum is formed, the correction is computed and immediately added 
-to the next term Xi before that term is added to the partial
-sum. Thus the idea is to capture the rounding errors and feed 
-them back into the summation. The method maybe written as follow
-\par 
-This paper shows comparison of few methods not all of them.
-In \cite{ComparisonOfMethods} many algorithms are compared with multiple problems. 
-The best of them is the method of Cascading accumulators \cite{CascadingAccumulators}. 
-Algorithm described in this paper has been compared to the method of Cascading 
-accumulators, because the method of Cascading accumulators is proved 
-to be the best in performance and precision in \cite{ComparisonOfMethods}.
-The fixed-point accumulator algorithm has no errors as well as the method of Cascading 
-accumulators.
+The first algorithm solving accurate summation problem was Kahan's method \cite{ComparisonOfMethods}. 
+Kahan's compensated summation method employs the correction 
+on every step of summation. 
+On every summation, correction for rounding error is computed and saved.
+Correction is added to term in next iteration cycle.
+If accumulator is large and terms are smaller, rounding error will be accumulated by correction variable, 
+and would not be lost in ordinary summing.
+Problem with Kahan is that correction will be lost if term in next iteration is relatively large to correction.
+Because that usually practice is to sort array of terms before summing, 
+which is inflexible because needs whole array of terms before summing.
 \par
-There are also a few more algorithms. 
-The most important is Kahan-Babuska-Klein summation algorithm \cite{KahanBabuskaKlein}.
-The solution written on this paper has outperforming precision and performances.
+Kahan-Babuska-Klein summation algorithm \cite{KahanBabuskaKlein} tries to overcome shortcomings of Kahan's by recursive correction.
+This algorithm needs whole array of terms and also needs large amount of memory to save data between recursions.
+\par 
+In \cite{ComparisonOfMethods} many algorithms are compared with multiple problems.
+The best of them is the method of Cascading accumulators \cite{CascadingAccumulators}.
+Algorithm described in this paper has been compared to the method of Cascading accumulators,
+because the method of Cascading accumulators is proved 
+to be the best in performance and precision in \cite{ComparisonOfMethods}.
+The fixed-point accumulator algorithm described in this paper practically has no rounding errors,
+as well as the method of Cascading accumulators.
 
 
 \section{Implementation}
@@ -367,7 +368,8 @@ proved in paper \cite{CascadingAccumulators}.
 'Many smalls, one large' is problem where many small numbers 
 are being summed with one large number. 
 Large number is 1.0 and small number is $2^{24} \epsilon$.
-In this paper $\epsilon$ is unit roundoff relative to 1.0 and is defined as $b^{-(p-1)}/2$ by Demmel.
+In this paper $\epsilon$ is unit roundoff relative to 1.0 and 
+is defined as $b^{-(p-1)}/2$ by Demmel.
 Small numbers are accumulated to one large number 1.0, the result would be 2.0.
 \par
 'One large, many smalls' is problem where one large number 
