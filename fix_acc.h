@@ -523,7 +523,7 @@ namespace fix_acc {
 				uint8_t a_index = fu.fields.exponent >> 6;
 				uint8_t shift = fu.fields.exponent & 0x3f;
 
-#if 1
+#if 0
 
 				uint128_t_union iu;
 				iu.i64[0] = uint32_t(fu.fields.mantisa) | 0x800000;
@@ -616,33 +616,37 @@ namespace fix_acc {
 						// TODO Not quite working to direct asign to cl in input list.
 						"	mov  %8, %%cl                   \n"
 
-						"   lea   jmp_table(%7, %7, 4), %7  \n" // *5.
+						"   lea   1f(%7, %7, 4), %7         \n" // *5.
 						"	shld  %%cl, %5, %6              \n"
 						"	shl   %%cl, %5                  \n"
+						"	xor   %%rcx, %%rcx              \n"
 						"   jmpq  *%7                       \n"
-						"jmp_table:                         \n"
-						"case_0:                            \n"
-						"	add   %5, %0                    \n"
-						"	xor   %5, %5                    \n"
+						"1:                                 \n"
+						"	add   %5, %0                    \n" // case 0
 						"	adc   %6, %1                    \n"
-						"	adc   %5, %2                    \n"
-						"	adc   %5, %3                    \n"
-						"	adc   %5, %4                    \n"
-						"	jmp   end                       \n"
-						"case_1:                            \n"
-						"	add   %5, %1                    \n"
-						"	xor   %5, %5                    \n"
+						"	adc   %%rcx, %2                 \n"
+						"	adc   %%rcx, %3                 \n"
+						"	adc   %%rcx, %4                 \n"
+						"	jmp   3f                        \n"
+						"	nop                             \n"
+						"	nop                             \n"
+						"	nop                             \n"
+						"2:                                 \n"
+						"	add   %5, %1                    \n" // case 1
 						"	adc   %6, %2                    \n"
-						"	adc   %5, %3                    \n"
-						"	adc   %5, %4                    \n"
-						"	jmp   end                       \n"
+						"	adc   %%rcx, %3                 \n"
+						"	adc   %%rcx, %4                 \n"
+						"	jmp   3f                        \n"
 						"   nop                             \n"
-						"end:                        \n"
+						"	nop                             \n"
+						"	nop                             \n"
+						"	nop                             \n"
+						"3:                                 \n"
 						// TODO Rest of cases.
 						: "+r"(a[0]), "+r"(a[1]), "+r"(a[2]),
 						  	  "+r"(a[3]), "+r"(a[4])
-						: "r"(m), "r"(u), "r"(j), "cl"(shift)
-						: "cl", "cc"
+						: "r"(m), "r"(u), "r"(j), "r"(shift)
+						: "rcx", "cc"
 				);
 
 #else
@@ -759,7 +763,9 @@ namespace fix_acc {
 			auto flags_backup = os.flags();
 
 			os << std::setfill('0');
-			for(int i = 4; i >= 0; i--){
+			os << std::setw(16) << n.a[4];
+			for(int i = 3; i >= 0; i--){
+				os << '_';
 				os << std::setw(16) << n.a[i];
 			}
 

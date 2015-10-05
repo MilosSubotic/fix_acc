@@ -132,9 +132,17 @@ float cascade_acc_sum(const std::vector<float>& fv) {
 
 float fix_acc_sum(const std::vector<float>& fv) {
 	fix_acc::fasp acc(0.0);
+#if 1
 	for(auto iter = fv.begin(); iter != fv.end(); iter++){
 		acc += *iter;
 	}
+#else
+	for(int i = 0; i < 4; i++){
+		acc += fv[i];
+	}
+#endif
+	DEBUG_HEX(acc);
+	DEBUG(float(acc));
 
 	return float(acc);
 }
@@ -182,7 +190,7 @@ void test_problem() {
 	DEBUG(fix_acc_sum(large_and_smalls_and_tinies));
 #endif
 
-#if 1
+#if 0
 	assert(ordinary_sum(smalls_and_large) == 2.0);
 	assert(ordinary_sum(large_and_smalls) == 1.0);
 	assert(ordinary_sum(large_and_smalls_and_tinies) == 1.0);
@@ -220,7 +228,7 @@ void test_problem() {
 	}
 	PRINT_MEASURED_TIME(ordinary_sum_large_and_smalls_and_tinies_time);
 
-
+/*
 	TimeMeasure kahan_sum_smalls_and_large_time;
 	for(int i = 0; i < TIME_MEASUREMENT_ITERS; i++){
 		assert(kahan_sum(smalls_and_large) == 2.0);
@@ -257,14 +265,14 @@ void test_problem() {
 		assert(cascade_acc_sum(large_and_smalls_and_tinies) == 2.0 + 4*small);
 	}
 	PRINT_MEASURED_TIME(cascade_acc_sum_large_and_smalls_and_tinies_time);
-
+*/
 
 	TimeMeasure fix_acc_sum_smalls_and_large_time;
 	for(int i = 0; i < TIME_MEASUREMENT_ITERS; i++){
 		assert(fix_acc_sum(smalls_and_large) == 2.0);
 	}
 	PRINT_MEASURED_TIME(fix_acc_sum_smalls_and_large_time);
-
+/*
 	TimeMeasure fix_acc_sum_large_and_smalls_time;
 	for(int i = 0; i < TIME_MEASUREMENT_ITERS; i++){
 		assert(fix_acc_sum(large_and_smalls) == 2.0);
@@ -276,7 +284,7 @@ void test_problem() {
 		assert(fix_acc_sum(large_and_smalls_and_tinies) == 2.0 + 4*small);
 	}
 	PRINT_MEASURED_TIME(fix_acc_sum_large_and_smalls_and_tinies_time);
-
+*/
 #endif
 }
 
