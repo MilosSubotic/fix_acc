@@ -523,7 +523,7 @@ namespace fix_acc {
 				uint8_t a_index = fu.fields.exponent >> 6;
 				uint8_t shift = fu.fields.exponent & 0x3f;
 
-#if 0
+#if 1
 
 				uint128_t_union iu;
 				iu.i64[0] = uint32_t(fu.fields.mantisa) | 0x800000;
@@ -634,7 +634,7 @@ namespace fix_acc {
 						"	nop                             \n"
 						"2:                                 \n"
 						"	add   %5, %1                    \n" // case 1
-						"	adc   %%rbx, %2                    \n"
+						"	adc   %%rbx, %2                 \n"
 						"	adc   %%rcx, %3                 \n"
 						"	adc   %%rcx, %4                 \n"
 						"	jmp   3f                        \n"
