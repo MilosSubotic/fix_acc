@@ -613,8 +613,6 @@ namespace fix_acc {
 				uint64_t j = a_index << 2; // *4
 
 				asm(
-						// TODO Not quite working to direct asign to cl in input list.
-
 						"   lea   1f(%7, %7, 4), %7         \n" // *5.
 						"	shld  %%cl, %5, %6              \n"
 						"	shl   %%cl, %5                  \n"
