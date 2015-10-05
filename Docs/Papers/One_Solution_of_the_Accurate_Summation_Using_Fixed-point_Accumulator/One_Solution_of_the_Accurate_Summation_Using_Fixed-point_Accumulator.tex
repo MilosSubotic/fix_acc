@@ -297,11 +297,12 @@ Accurate summation, summation algorithm, floating-point numbers, fixed-point, ro
 \section{Introduction}
 % no \IEEEPARstart
 An accurate summation \cite{Higham} is algorithm for summing 
-floating-point numbers \cite{WhatShouldKnowAboutFP}. It is well known that the summation 
+floating-point numbers \cite{WhatShouldKnowAboutFP}. 
+It is well known that the summation 
 of large sets of numbers can be very inaccurate due
 to the accumulation of rounding errors. 
 \par
-The typical problem is 'one large, many smalls' \cite{ComparisonOfMethods} 
+The typical problem is 'One large, many smalls' \cite{ComparisonOfMethods} 
 where one big number is being summed with many small numbers. 
 For example, in four-digit decade floating-point space,
 if 1000 small numbers 0.001 is accumulated to one large 
@@ -333,14 +334,14 @@ which is inflexible because needs whole array of terms before summing.
 \par
 Kahan-Babuska-Klein summation algorithm \cite{KahanBabuskaKlein} tries to overcome shortcomings of Kahan's by recursive correction.
 This algorithm needs whole array of terms and also needs large amount of memory to save data between recursions.
-\par 
+\par
 In \cite{ComparisonOfMethods} many algorithms are compared with multiple problems.
-The best of them is the method of Cascading accumulators \cite{CascadingAccumulators}.
-Algorithm described in this paper has been compared to the method of Cascading accumulators,
-because the method of Cascading accumulators is proved 
+The best of them is the method of Cascading Accumulators \cite{CascadingAccumulators}.
+Algorithm described in this paper has been compared to the method of Cascading Accumulators,
+because the method of Cascading Accumulators is proved 
 to be the best in performance and precision in \cite{ComparisonOfMethods}.
 The fixed-point accumulator algorithm described in this paper practically has no rounding errors,
-as well as the method of Cascading accumulators.
+as well as the method of Cascading Accumulators.
 
 
 \section{Implementation}
@@ -354,22 +355,23 @@ be done without any problems. The inline methods are used to give compiler
 the opportunity to make a good optimization and to fit
 everything into registers.
 
+\par
+
 
 \section{Measurements}
-This paper presents three problems: 'many smalls, one large',
-'one large, many smalls' and 'one large, many smalls, many tinies'.
+This paper presents three problems: 'Many smalls, one large',
+'One large, many smalls' and 'One large, many smalls, many tinies'.
 In the following, fixed-point algorithm is compared with Kahan's method
-which is classic algorithm and the method of Cascading accumulators 
+which is classic algorithm and the method of Cascading Accumulators 
 which presents the best solution due to its performance and precision 
 proved in paper \cite{CascadingAccumulators}.
-
 
 \par
 'Many smalls, one large' is problem where many small numbers 
 are being summed with one large number. 
 Large number is 1.0 and small number is $2^{24} \epsilon$.
 In this paper $\epsilon$ is unit roundoff relative to 1.0 and 
-is defined as $b^{-(p-1)}/2$ by Demmel.
+is $b^{-(p-1)}/2$ or concretely for single precision float point $2^{-24}$ as defined by Demmel \cite{DemmelsEpsilon}.
 Small numbers are accumulated to one large number 1.0, the result would be 2.0.
 \par
 'One large, many smalls' is problem where one large number 
@@ -377,7 +379,7 @@ is being summed with many small numbers. It means that
 if one large number 1.0 is summed with small 
 numbers $2^{24} \epsilon$, the result would be 1.0 instead 
 of 2.0 because of rounding errors.
-\par 
+\par
 'One large, many smalls, many tinies' is problem where one 
 large number is being summed with $2^{24}$ small numbers and $2^{26}$
 tiny numbers. 
@@ -387,18 +389,21 @@ summed with small numbers $2^{24} \epsilon$ and tiny
 numbers $2^{26} \epsilon^2$.
 \par
 The various methods and data were tested by running C++ programs.
-The results are shown in Table below. For each method and data 
-set we show two numbers, one that presents the time required for 
-execution and another that presents obtained value of the algorithm.
+The results are shown in Table~\ref{tab:measurement}. 
+Two numbers are shown for each method and problem, 
+one that represents obtained value of the algorithm,
+and another that represents the time required for execution of problem in 100 iteration.
 
 \begin{table}[!t]
 \renewcommand{\arraystretch}{1.3}
 \caption{Result and measured time for 100 iteration}
 \label{tab:measurement}
 \begin{tabular}{|c|c|c|c|}
-%TODO Designate row and column with method and problem.
 \hline
-	\parbox[]{1.8cm}{ \center } & 
+	\parbox[]{1.7cm}{ \centering Methods } & 
+	\multicolumn{3}{|p{5.1cm}|}{\centering Test problems } \\
+\hline
+	\parbox[]{1.7cm}{ \center } & 
 	\parbox[]{1.7cm}{ \centering Many smalls, one large } & 
 	\parbox[]{1.7cm}{ \center One large, many smalls } & 
 	\parbox[]{1.7cm}{ \center One large, many smalls, many tinies \linebreak } \\
@@ -431,44 +436,51 @@ execution and another that presents obtained value of the algorithm.
 \end{tabular}
 \end{table}
 
-\par  
-This paper presents solution that is comparable with Cascading 
-accumulator in performances. Reason for that is that those 64 
-double accumulators are in caches memory and fixed-point accumulator 
+\par
+Kahan's algorithm does not work for problem called 'One large, many smalls, many tinies'.
+Correction variable is larger or equal than small number in the moment when tinies numbers are started to be accumulated,
+and tinies are lost because there are order of $\epsilon$ of small number.
+For example, according to previous explanation of problem 'One large, many smalls, many tines', 
+it is expected to get a result $2.0 + 4\epsilon$, but the result is 2.0, 
+because $4\epsilon$ in tinies is lost.
+To solve this problem Kahan's algorithm need compensation for its compensation variable.
+This imply usage of recursive algorithms like Kahan-Babuska-Klein.
+
+\par
+Both fixed-point accumulator and Cascading Accumulators method are without rounding errors.
+In case of Cascading Accumulators method it is possible to have overflow on particular accumulator.
+Particular implementation of Cascading Accumulators used in this work have approximately 27 bits before overflow.
+Fixed-point accumulator have approximately 41 bits before overflow.
+Making problem to test overflow robustness of Cascading Accumulators method and fixed-point accumulator solution will be future work.
+\par
+The fixed-point accumulator is comparable with Cascading Accumulators in performances.
+Solution described here is less than two times slower than Cascading Accumulators.
+Reason for that is that those 64 
+double accumulators are in cache memory and fixed-point accumulator 
 has a bit more work that is a bit larger number of instructions 
-per summing than the Cascading accumulator, so it comes to the same.
-\par 
-The solution is not half as fast as Cascading accumulator but it 
-occupies a significantly smaller memory space. More than 12 times 
-less memory is needed for fixed-point accumulator than for Cascading accumulator.
-\par 
-Kahan's algorithm does not work for problem called 'one large, many smalls, many tinies'
-because it needs recursive Kahan's algorithm with variable c which is used for storing rounding errors. 
-For example, according to previous explanation of problem 'one large, many smalls, many tines', 
-it is expected to get a result $2.0 + 4\epsilon$, but the result is 2.000. 
-The reason for this error lies in need of 
-recursive Kahan inside regular Kahan's algorithm. This method has 
-comparable performances with accurate summation using fixed-point accumulator.
-\par 
-We conclude that the Cascading Accumulator method is not the
-best algorithm.It needs double precision fixed-point accumulators.
+per summing than the Cascading Accumulators, so it comes to the same.
+Even with slightly worse performance, fixed-point accumulator need
+more than 12 times less memory in compare to Cascading Accumulators.
+\par
+Bad side of Cascading Accumulators is that it needs double precision floating-point accumulators.
 These accumulators are not always available. Due to this facts, implementation of 
-Cascading Accumulators for double precision is not recommended. 
-This paper shows that fixed-point accumulator have no problems of 
-using double precision while some architectures do not have greater float type of double. 
-\par 
-Fixed-point accumulator would be better in hardware due to the fact that it is less logic occupied.
+Cascading Accumulators for double precision could not be possible.
+The fixed-point accumulator could be implemented on any architecture.
+\par
+The fixed-point accumulator would be better in hardware due to the fact that it 
+occupies much less logic and it is faster than the floating-point units.
 
 \section{Conclusion}
-According to the above table it has been found and proved
+In this paper it has been proven
 that the accurate summation using fixed-point accumulator 
-algorithm is better than the method of Cascading Accumulators 
-as well as Kahan's algorithm and all the others.
+algorithm do not have rounding errors as well as the method of Cascading Accumulators,
+the best known algorithm.
+It is shown that solution presented in this paper has comparable performances as Cascading Accumulators method.
 \par
-Further improvement can be achieved by optimizing this
-solution in assembler and implementing double precision version in hardware. 
-This solution should also be compared to some more 
-algorithms and problems. 
+Further improvement in C++ can be achieved by optimizing 
+solution in assembler and implementing double precision version.
+Also hardware implementation should be implemented and compared to other algorithms.
+This solution should also be compared to more algorithms and problems. 
 
 % use section* for acknowledgment
 \section*{Acknowledgment}
