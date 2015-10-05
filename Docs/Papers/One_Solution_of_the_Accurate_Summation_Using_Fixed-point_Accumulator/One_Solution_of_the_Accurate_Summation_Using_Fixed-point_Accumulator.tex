@@ -272,9 +272,8 @@
 \begin{abstract}
 The accurate summation is algorithm for summing floating-point numbers with reduced rounding errors.
 This paper presents one solution of accurate summation problem using fixed-point accumulator.
-%TODO After we found out performances of algorithm choose one of those two sentances.
-%In compare with other algorithms, solution has outperforming precision and comparable performances.
-%In compare with other algorithms, solution has outperforming precision and performances.
+Implemented algorithm is compared with others
+and has performances and precision comparable with the best existing algorithms.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -395,35 +394,35 @@ execution and another that presents obtained value of the algorithm.
 \begin{tabular}{|c|c|c|c|}
 %TODO Designate row and column with method and problem.
 \hline
-	\parbox[]{2cm}{ \center } & 
-	\parbox[]{1.8cm}{ \center Many smalls, one large } & 
-	\parbox[]{1.8cm}{ \center One large, many smalls } & 
-	\parbox[]{1.8cm}{ \center One large, many smalls, many tinies } \\
+	\parbox[]{1.8cm}{ \center } & 
+	\parbox[]{1.7cm}{ \centering Many smalls, one large } & 
+	\parbox[]{1.7cm}{ \center One large, many smalls } & 
+	\parbox[]{1.7cm}{ \center One large, many smalls, many tinies \linebreak } \\
 \hline
 	Correct result &
-	\parbox[]{1.8cm}{ \center 2.0 \linebreak} &
-	\parbox[]{1.8cm}{ \center 2.0 \linebreak} &
-	\parbox[]{1.8cm}{ \center $2.0 + 4\epsilon$ \linebreak} \\
+	\parbox[]{1.7cm}{ \center 2.0 \linebreak} &
+	\parbox[]{1.7cm}{ \center 2.0 \linebreak} &
+	\parbox[]{1.7cm}{ \center $2.0 + 4\epsilon$ \linebreak} \\
 \hline
 	Ordinary sum &
-	\parbox[]{1.8cm}{ \center 2.0 \linebreak 7.194s \linebreak} &
-	\parbox[]{1.8cm}{ \center 1.0 \linebreak 7.258s \linebreak} &
-	\parbox[]{1.8cm}{ \center 1.0 \linebreak 34.30s \linebreak} \\
+	\parbox[]{1.7cm}{ \center 2.0 \linebreak 7.194s \linebreak} &
+	\parbox[]{1.7cm}{ \center 1.0 \linebreak 7.258s \linebreak} &
+	\parbox[]{1.7cm}{ \center 1.0 \linebreak 34.30s \linebreak} \\
 \hline
 	Kahan &
-	\parbox[]{1.8cm}{ \center 2.0 \linebreak 12.70s \linebreak} &
-	\parbox[]{1.8cm}{ \center 2.0 \linebreak 12.69s \linebreak} &
-	\parbox[]{1.8cm}{ \center 2.0 \linebreak 62.32s \linebreak} \\
+	\parbox[]{1.7cm}{ \center 2.0 \linebreak 12.70s \linebreak} &
+	\parbox[]{1.7cm}{ \center 2.0 \linebreak 12.69s \linebreak} &
+	\parbox[]{1.7cm}{ \center 2.0 \linebreak 62.32s \linebreak} \\
 \hline
-	\parbox[]{2.0cm}{ \center Cascade \linebreak accumulator \linebreak} &
-	\parbox[]{1.8cm}{ \center 2.0 \linebreak 7.008s \linebreak} &
-	\parbox[]{1.8cm}{ \center 2.0 \linebreak 6.977s \linebreak} &
-	\parbox[]{1.8cm}{ \center $2.0 + 4\epsilon$ \linebreak 34.93s \linebreak} \\
+	\parbox[]{1.7cm}{ \center Cascade \linebreak accumulator \linebreak} &
+	\parbox[]{1.7cm}{ \center 2.0 \linebreak 7.008s \linebreak} &
+	\parbox[]{1.7cm}{ \center 2.0 \linebreak 6.977s \linebreak} &
+	\parbox[]{1.7cm}{ \center $2.0 + 4\epsilon$ \linebreak 34.93s \linebreak} \\
 \hline
-	\parbox[]{2.0cm}{ \center Fixed-point \linebreak accumulator \linebreak} &
-	\parbox[]{1.8cm}{ \center 2.0 \linebreak 11.69s \linebreak} &
-	\parbox[]{1.8cm}{ \center 2.0 \linebreak 11.70s \linebreak} &
-	\parbox[]{1.8cm}{ \center $2.0 + 4\epsilon$ \linebreak 58.53s \linebreak} \\	
+	\parbox[]{1.7cm}{ \center Fixed-point \linebreak accumulator \linebreak} &
+	\parbox[]{1.7cm}{ \center 2.0 \linebreak 11.69s \linebreak} &
+	\parbox[]{1.7cm}{ \center 2.0 \linebreak 11.70s \linebreak} &
+	\parbox[]{1.7cm}{ \center $2.0 + 4\epsilon$ \linebreak 58.53s \linebreak} \\	
 \hline
 \end{tabular}
 \end{table}
