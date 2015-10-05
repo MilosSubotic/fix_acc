@@ -365,22 +365,24 @@ proved in paper \cite{CascadingAccumulators}.
 
 \par
 'Many smalls, one large' is problem where many small numbers 
-are being summed with one large number. If $2^24 *\epsilon$ small 
-numbers are accumulated to one large number 1.0, where $\epsilon$ 
-is defined as $b^{-(p-1)}/2$ by Demmel, the result would be 2.0. 
-\par 
+are being summed with one large number. 
+Large number is 1.0 and small number is $2^{24} \epsilon$.
+In this paper $\epsilon$ is unit roundoff relative to 1.0 and is defined as $b^{-(p-1)}/2$ by Demmel.
+Small numbers are accumulated to one large number 1.0, the result would be 2.0.
+\par
 'One large, many smalls' is problem where one large number 
 is being summed with many small numbers. It means that
 if one large number 1.0 is summed with small 
-numbers $2^24 *\epsilon$, where $\epsilon$ is defined 
-as $b^{-(p-1)}/2$ by Demmel, the result would be 1.0 instead 
+numbers $2^{24} \epsilon$, the result would be 1.0 instead 
 of 2.0 because of rounding errors.
 \par 
 'One large, many smalls, many tinies' is problem where one 
-large number is being summed with $2^24$ small numbers and $2^26$
-tiny numbers. One large number 1.0 is 
-summed with small numbers $2^24 *\epsilon$ and tiny 
-numbers $2^26 *\epsilon^2$, where $\epsilon$ is defined as $b^{-(p-1)}/2$ by Demmel.
+large number is being summed with $2^{24}$ small numbers and $2^{26}$
+tiny numbers. 
+$2^{26}$ tiny numbers is equivalent to 4 small numbers.
+One large number 1.0 is 
+summed with small numbers $2^{24} \epsilon$ and tiny 
+numbers $2^{26} \epsilon^2$.
 \par
 The various methods and data were tested by running C++ programs.
 The results are shown in Table below. For each method and data 
@@ -441,8 +443,8 @@ less memory is needed for fixed-point accumulator than for Cascading accumulator
 Kahan's algorithm does not work for problem called 'one large, many smalls, many tinies'
 because it needs recursive Kahan's algorithm with variable c which is used for storing rounding errors. 
 For example, according to previous explanation of problem 'one large, many smalls, many tines', 
-it is expected to get a result $2.0 + 4\epsilon$, where $\epsilon$ is defined as $b^{-(p-1)}/2$ by Demmel, 
-but the result is 2.000. The reason for this error lies in need of 
+it is expected to get a result $2.0 + 4\epsilon$, but the result is 2.000. 
+The reason for this error lies in need of 
 recursive Kahan inside regular Kahan's algorithm. This method has 
 comparable performances with accurate summation using fixed-point accumulator.
 \par 
