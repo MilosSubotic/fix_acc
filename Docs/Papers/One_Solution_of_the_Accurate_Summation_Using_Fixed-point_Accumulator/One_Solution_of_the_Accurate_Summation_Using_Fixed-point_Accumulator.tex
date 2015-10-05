@@ -332,30 +332,45 @@ Problem with Kahan is that correction will be lost if term in next iteration is 
 Because that usually practice is to sort array of terms before summing, 
 which is inflexible because needs whole array of terms before summing.
 \par
-Kahan-Babuska-Klein summation algorithm \cite{KahanBabuskaKlein} tries to overcome shortcomings of Kahan's by recursive correction.
+The Kahan-Babuska-Klein summation algorithm \cite{KahanBabuskaKlein} tries to overcome shortcomings of Kahan's by recursive correction.
 This algorithm needs whole array of terms and also needs large amount of memory to save data between recursions.
 \par
 In \cite{ComparisonOfMethods} many algorithms are compared with multiple problems.
 The best of them is the method of Cascading Accumulators \cite{CascadingAccumulators}.
+It uses array of 64 double precision floating-point accumulators.
+Every single precision term with 4 consecutive exponent values is accumulated to appropriate cascading accumulator.
+The maximal roundoff error given by this scheme is up to 4 bits.
 Algorithm described in this paper has been compared to the method of Cascading Accumulators,
 because the method of Cascading Accumulators is proved 
 to be the best in performance and precision in \cite{ComparisonOfMethods}.
 The fixed-point accumulator algorithm described in this paper practically has no rounding errors,
 as well as the method of Cascading Accumulators.
 
-
 \section{Implementation}
-The fixed-point accumulator is implemented as c++ number class.
-Also, it consists of five 64-bit numbers. The compiler puts these 
-numbers into registers, so numbers do not go into cash
-memory and therefore this solution is faster than another ones.
-So far, we have made only single precision fixed-point 
-accumulator. However, double precision accumulator could also 
-be done without any problems. The inline methods are used to give compiler
-the opportunity to make a good optimization and to fit
-everything into registers.
-
+The fixed-point accumulator is implemented as C++ number class.
+It has implemented typical methods for number class: 
+arithmetic operators, assign operators, conversion operators, printing operators and support of manipulators.
+The inline methods are used to give compiler the opportunity to make a good optimization and to fit variable into registers.
 \par
+So far, only single precision fixed-point accumulator is implemented. 
+However, double precision could be implement with little effort.
+\par
+The accumulator is 320-bit multiple precision integer, which is implemented as array of 5 64-bit integers.
+The compiler puts these numbers into registers, 
+so the numbers are not stored into cache memory 
+and therefore this solution is potentially faster than another ones.
+The 0th bit of the mantissa of de-normalized number (exponent field equals 0) is mapped to the 0th bit of accumulator.
+The 23rd bit of the accumulator represents 23rd bit of mantissa (hidden 1) with exponent field equals 1.
+The 275th bit of the accumulator (20th bit of the 4th 64-bit integer) 
+is mapped to the highest bit in the single precision floating-point (hidden 1 and exponent field 254).
+If any of bits with position larger or equal than 276 are set, an overflow in fixed-point accumulator occurred.
+\par
+Advantage of the solution shown in this paper in comparison to the method of Cascade Accumulator 
+is that it has up to 12 times less memory used.
+Fixed-point accumulator need 40 bytes, 
+comparing with 512 Cascade Accumulator implemented in the \cite{ComparisonOfMethods}.
+\par
+Source code of implementation described here could be found in \cite{FixAccGitHub}.
 
 
 \section{Measurements}
