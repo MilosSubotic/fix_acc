@@ -140,9 +140,9 @@ float fix_acc_sum(const std::vector<float>& fv) {
 	for(int i = 0; i < 4; i++){
 		acc += fv[i];
 	}
-#endif
 	DEBUG_HEX(acc);
 	DEBUG(float(acc));
+#endif
 
 	return float(acc);
 }

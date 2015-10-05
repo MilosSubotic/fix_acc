@@ -614,7 +614,6 @@ namespace fix_acc {
 
 				asm(
 						// TODO Not quite working to direct asign to cl in input list.
-						"	mov  %8, %%cl                   \n"
 
 						"   lea   1f(%7, %7, 4), %7         \n" // *5.
 						"	shld  %%cl, %5, %6              \n"
@@ -645,7 +644,7 @@ namespace fix_acc {
 						// TODO Rest of cases.
 						: "+r"(a[0]), "+r"(a[1]), "+r"(a[2]),
 						  	  "+r"(a[3]), "+r"(a[4])
-						: "r"(m), "r"(u), "r"(j), "r"(shift)
+						: "r"(m), "r"(u), "r"(j), "c"(shift)
 						: "rcx", "cc"
 				);
 
