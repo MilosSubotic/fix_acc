@@ -164,8 +164,8 @@ namespace fix_acc {
 		 * 0th bit of a[2]: 2*64 - 22 = 106
 		 * 0th bit of a[3]: 3*64 - 22 = 170
 		 * 0th bit of a[4]: 4*64 - 22 = 234
-		 * 21st bit of a[4]: 255
-		 * 22nd bit of a[4]: infinity
+		 * 20th bit of a[4]: 254
+		 * 21st bit of a[4]: infinity
 		 */
 		uint64_t a[5];
 
