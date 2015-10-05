@@ -609,18 +609,22 @@ namespace fix_acc {
 				// Nothing faster than the switch.
 
 				uint64_t m = uint32_t(fu.fields.mantisa) | 0x800000;
-				uint64_t u = 0;
 				uint64_t j = a_index << 2; // *4
 
 				asm(
-						"   lea   1f(%7, %7, 4), %7         \n" // *5.
-						"	shld  %%cl, %5, %6              \n"
+						"   lea   1f(%6, %6, 4), %6         \n" // *5.
+
+						"	mov   %5, %%rbx                 \n"
 						"	shl   %%cl, %5                  \n"
+						"	add   $-64, %%cl                \n"
+						"	neg   %%cl                      \n"
+						"	shr   %%cl, %%rbx               \n"
+
 						"	xor   %%rcx, %%rcx              \n"
-						"   jmpq  *%7                       \n"
+						"   jmpq  *%6                       \n"
 						"1:                                 \n"
 						"	add   %5, %0                    \n" // case 0
-						"	adc   %6, %1                    \n"
+						"	adc   %%rbx, %1                    \n"
 						"	adc   %%rcx, %2                 \n"
 						"	adc   %%rcx, %3                 \n"
 						"	adc   %%rcx, %4                 \n"
@@ -630,7 +634,7 @@ namespace fix_acc {
 						"	nop                             \n"
 						"2:                                 \n"
 						"	add   %5, %1                    \n" // case 1
-						"	adc   %6, %2                    \n"
+						"	adc   %%rbx, %2                    \n"
 						"	adc   %%rcx, %3                 \n"
 						"	adc   %%rcx, %4                 \n"
 						"	jmp   3f                        \n"
@@ -642,8 +646,8 @@ namespace fix_acc {
 						// TODO Rest of cases.
 						: "+r"(a[0]), "+r"(a[1]), "+r"(a[2]),
 						  	  "+r"(a[3]), "+r"(a[4])
-						: "r"(m), "r"(u), "r"(j), "c"(shift)
-						: "rcx", "cc"
+						: "r"(m), "r"(j), "c"(shift)
+						: "rbx", "rcx", "cc"
 				);
 
 #else
@@ -741,6 +745,7 @@ namespace fix_acc {
 				;
 
 #endif
+
 			}
 
 #endif
