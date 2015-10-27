@@ -3,9 +3,11 @@
 
 CXX=clang++
 
-SOURCES := fix_acc_test.cpp main.cpp TimeMeasure.cpp
+SOURCES=fix_acc_test.cpp main.cpp TimeMeasure.cpp
 
-CXXFLAGS += -std=c++11 -g -O3
+CXXFLAGS+=-std=c++11 -g -O3
+
+LIBS=-lrt
 
 ###############################################################################
 
