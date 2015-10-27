@@ -1,0 +1,52 @@
+[This is an automatically generated e-mail. Please don't reply to it.]
+
+Dear Jelena Jankovic,
+
+You submitted paper [ID=3426], entitled
+One Solution of the Accurate Summation Using Fixed-point Accumulator
+for TELFOR.
+
+Based on the enclosed set of reviews, your paper requires revision before it can be
+considered for acceptance for TELFOR.
+
+Please follow all suggestions noted by reviewers. If we do not receive
+your revised manuscript within next 2 days, your manuscript will be considered withdrawn.
+We will inform you about final decision about your paper status.
+
+To submit your final paper, please follow the same procedure as for initial paper submission.
+
+On behalf of Program Committee
+Prof. Dr Aleksandar Nešković
+Prof. Dr Irini Reljin
+
+Appended you will find the independent reviews of your paper.
+
+Reviewer 1 ratings (1=very weak , 2=weak , 3=average , 4=good, 5=excellent):
+Relevance: 3
+Originality: 3
+Technical correctness: 3
+Clarity: 2
+References: 3
+Overall evaluation: 3
+
+Reviewer 1 comment on paper:
+The proposed solution presented in the paper is Ok, however the presentation of the algorithm is poor. I believe that at least some details should be given in the paper in the form of flowchart (or other appropriate diagram). Form the current version of the paper, implementation of the summation process is not clear enough. In the “Measurements” part of the paper, I think that the sentence “Large number is 1.0 and small number is 2^24epsilon” is not correct (it can be concluded that small number is 1?). Similarly, the sentence “One large number 1.0 is summed with small numbers 2^24epsilon and tiny numbers 2^26epsilon^2” is probably not correct.
+
+Reviewer 2 ratings (1=very weak , 2=weak , 3=average , 4=good, 5=excellent):
+Relevance: 2
+Originality: 3
+Technical correctness: 2
+Clarity: 3
+References: 3
+Overall evaluation: 3
+
+Reviewer 3 ratings (1=very weak , 2=weak , 3=average , 4=good, 5=excellent):
+Relevance: 3
+Originality: 2
+Technical correctness: 2
+Clarity: 3
+References: 2
+Overall evaluation: 2
+
+Reviewer 3 comment on paper:
+The paper consists of numerous grammar mistakes which affect the quality of the paper. References..
