@@ -585,24 +585,24 @@ proved in paper \cite{CascadingAccumulators}.
 \par
 'Many smalls, one large' is problem where many small numbers 
 are being summed with one large number. 
-Large number is 1.0 and small number is $2^{24} \epsilon$.
+Large number is 1.0 and smaller number is $2^{24} \epsilon$.
 In this paper $\epsilon$ is unit roundoff relative to 1.0 and 
-is $b^{-(p-1)}/2$ or concretely for single precision float point $2^{-24}$ as defined by Demmel \cite{DemmelsEpsilon}.
+is $b^{-(p-1)}/2$ or concretely for single precision float point 
+$2^{-24}$ as defined by Demmel \cite{DemmelsEpsilon}.
 Small numbers are accumulated to one large number 1.0, the result would be 2.0.
 \par
-'One large, many smalls' is problem where one large number 
-is being summed with many small numbers. It means that
-if one large number 1.0 is summed with small 
-numbers $2^{24} \epsilon$, the result would be 1.0 instead 
-of 2.0 because of rounding errors.
+'One large, many smalls' is problem where one number 
+is being summed with many smaller numbers. 'One large, many smalls' 
+test consist of adding one number 1.0 and $2^{24}$ number $\epsilon$, 
+which is relatively small in compare with number 1.0.
+Тhe result would be 1.0 instead of 2.0 because of rounding errors.
 \par
 'One large, many smalls, many tinies' is problem where one 
-large number is being summed with $2^{24}$ small numbers and $2^{26}$
-tiny numbers. 
-$2^{26}$ tiny numbers is equivalent to 4 small numbers.
-One large number 1.0 is 
-summed with small numbers $2^{24} \epsilon$ and tiny 
-numbers $2^{26} \epsilon^2$.
+number is being summed with $2^{24}$ small numbers and $2^{26}$
+tiny numbers. $2^{26}$ tiny numbers is equivalent to 4 small numbers.
+'One large, many smalls, many tinies' test consist of adding 
+one number 1.0 and $2^{24}$ number $\epsilon$ and $2^{26}$ number 
+$epsilon^2$.
 \par
 The various methods and data were tested by running C++ programs.
 The results are shown in Table~\ref{tab:measurement}. 
