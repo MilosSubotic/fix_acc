@@ -227,7 +227,7 @@
 
 
 % correct bad hyphenation here
-\hyphenation{op-tical net-works semi-conduc-tor}
+%\hyphenation{op-tical net-works semi-conduc-tor}
 
 
 \begin{document}
@@ -353,7 +353,7 @@ arithmetic operators, assign operators, conversion operators, printing operators
 The inline methods are used to give compiler the opportunity to make a good optimization and to fit variable into registers.
 \par
 So far, only single precision fixed-point accumulator is implemented. 
-However, double precision could be implement with little effort.
+However, double precision could be implement with little additional effort.
 \par
 The accumulator is 320-bit multiple precision integer, which is implemented as array of 5 64-bit integers.
 The compiler puts these numbers into registers, 
@@ -363,7 +363,205 @@ The 0th bit of the mantissa of de-normalized number (exponent field equals 0) is
 The 23rd bit of the accumulator represents 23rd bit of mantissa (hidden 1) with exponent field equals 1.
 The 275th bit of the accumulator (20th bit of the 4th 64-bit integer) 
 is mapped to the highest bit in the single precision floating-point (hidden 1 and exponent field 254).
-If any of bits with position larger or equal than 276 are set, an overflow in fixed-point accumulator occurred.
+Figure~\ref{fig:fix_acc_nums} shows look of fixed-point accumulator, with value representing floating-point number 1.0.
+\par
+Rest of bits, from 276th bit to 319th, are useful for expanding precision.
+But when accumulator is converted back to single precision floating-point and any of those bits are set,
+an overflow in fixed-point accumulator occurs.
+Every number larger than 276-bit in fixed-point accumulator is cannot be represented with single precision floating-point.
+
+
+\def\regWidth{64mm}
+\def\regHeight{5mm}
+\begin{figure}[!t]
+	\centering
+    \begin{tikzpicture}
+		\node[anchor=east] at (-\regWidth, 8.5*\regHeight) {$acc_4$};
+		\draw (0mm, 8*\regHeight) rectangle (-\regWidth, 9*\regHeight) node[pos=.5] {All 0s};
+		\node[anchor=north] at (-\regWidth, 8*\regHeight) {319};
+		\node[anchor=north] at (0mm, 8*\regHeight) {256};
+		
+		\node[anchor=east] at (-\regWidth, 6.5*\regHeight) {$acc_3$};
+		\draw (0mm, 6*\regHeight) rectangle (-\regWidth, 7*\regHeight) node[pos=.5] {All 0s};
+		\node[anchor=north] at (-\regWidth, 6*\regHeight) {255};
+		\node[anchor=north] at (0mm, 6*\regHeight) {192};
+		
+		\node[anchor=east] at (-\regWidth, 4.5*\regHeight) {$acc_2$};
+		\draw (-0.33*\regWidth, 4*\regHeight) rectangle (-\regWidth, 5*\regHeight) node[pos=.5] {0s};
+		\draw (-0.3*\regWidth, 4*\regHeight) rectangle (-0.33*\regWidth, 5*\regHeight) node[pos=.5] {1};
+		\draw (0mm, 4*\regHeight) rectangle (-0.3*\regWidth, 5*\regHeight) node[pos=.5] {0s};
+		\node[anchor=north] at (-\regWidth, 4*\regHeight) {191};
+		\node[anchor=north] at (-0.315*\regWidth, 4*\regHeight) {149};
+		\node[anchor=north] at (0mm, 4*\regHeight) {128};
+		
+		\node[anchor=east] at (-\regWidth, 2.5*\regHeight) {$acc_1$};
+		\draw (0mm, 2*\regHeight) rectangle (-\regWidth, 3*\regHeight) node[pos=.5] {All 0s};
+		\node[anchor=north] at (-\regWidth, 2*\regHeight) {127};
+		\node[anchor=north] at (0mm, 2*\regHeight) {64};
+		
+		\node[anchor=east] at (-\regWidth, 0.5*\regHeight) {$acc_0$};
+		\draw (0mm, 0*\regHeight) rectangle (-\regWidth, 1*\regHeight) node[pos=.5] {All 0s};
+		\node[anchor=north] at (-\regWidth, 0*\regHeight) {63};
+		\node[anchor=north] at (0mm, 0*\regHeight) {0};
+				
+	\end{tikzpicture}
+	
+	\caption{Fixed-point accumulator having value $1.0$}
+	\label{fig:fix_acc_nums}
+\end{figure}
+
+
+% Define block styles
+\tikzstyle{decision} = [
+	diamond, draw, fill=blue!20, 
+	text width=4.5em, text badly centered, node distance=3cm, inner sep=0pt
+]
+\tikzstyle{block} = [
+	rectangle, draw, fill=blue!20, 
+	text width=5em, text centered, rounded corners, minimum height=4em
+]
+\tikzstyle{line} = [draw, -latex']
+\tikzstyle{cloud} = [
+	draw, ellipse,fill=red!20, node distance=3cm,
+    minimum height=2em
+]
+\begin{figure}[!t]
+	\centering
+	\begin{tikzpicture}[node distance = 2cm, auto]
+		% Place nodes
+		\node [cloud] (input) {Floating-point number};
+		\node [decision, below of=input] (is_denorm) {Is de-normal?};
+		
+		\node [block, left of=is_denorm, node distance=3cm] (denorm_add) {Accumulate mantissa to $acc_0$};
+		\node [block, below of=denorm_add] (denorm_carry) {Propagate carry from $acc_0$ to $acc_4$};
+		
+		\node [block, right of=is_denorm, node distance=3cm] (exponent) {exponent to shift};
+		\node [block, below of=exponent] (split) {Split shift};
+		\node [block, below of=split] (local_shift) {Local shift of mantissa};
+		\node [block, below of=local_shift] (acc) {Accumulate to $acc_{n+1}:acc_{n}$};
+		\node [block, below of=acc] (carry) {Propagate carry from $acc_{n}$ to $acc_4$};
+		\node [cloud, left of=carry, node distance=3cm] (end) {End};
+		
+		% Draw edges
+		\path [line] (input) -- (is_denorm);
+		
+		\path [line] (is_denorm) -- node [near start] {yes} (denorm_add);
+		\path [line] (denorm_add) -- (denorm_carry);
+		\path [line] (denorm_carry) |- (end);
+
+		\path [line] (is_denorm) -- node [near start] {no} (exponent);		
+		\path [line] (exponent) -- (split);
+		\path [line] (split) -- (local_shift);
+		\path [line] (local_shift) -- (acc);
+		\path [line] (acc) -- (carry);
+		\path [line] (carry) -- (end);
+
+	\end{tikzpicture}
+	
+	\caption{Algorithm of fixed-point accumulation}
+	\label{fig:fix_acc_algo}
+\end{figure}
+
+
+\par
+Figure~\ref{fig:fix_acc_algo} shows algorithm of direct accumulation of floating-points numbers to fixed-point accumulator.
+Floating-points numbers which are accumulated do not need to be promoted to whole fixed-point type 
+and then to be added on fixed-point accumulator.
+Instead optimized approach is used.
+If floating-point number is de-normalized its mantissa without hidden 1 is accumulated to lowest part of accumulator $acc_0$, 
+without any shifting.
+Depending is it positive or negative floating-point number, mantissa is added or subtracted to $acc_0$, respectively.
+After that carry is propagated from $acc_0$ to $acc_4$.
+Normalized numbers have to be shifted before accumulation, depending on their exponent. 
+Shift value is calculated as exponent reduced by 1 and it is 8-bit wide.
+Shift value is then splitted to 6 lower bit local shift and 2 higher bits for global shift.
+Local shift value is used to shift mantissa with hidden 1 across two temporal 64-bit registers, 
+lower $tmp_0$ and higher $tmp_1$.
+If, for example, local shift is below 42, all mantissa bits will stay in lower $tmp_0$, 
+otherwise some will be shifted to higher register $tmp_1$.
+After local shifting, global shift decides to which accumulator number aforementioned two temporal registers are accumulated.
+If global shift is $n$, $tmp_0$ is accumulated to $acc_n$
+and $tmp_1$ is accumulated to $acc_{n+1}$.
+Same as for de-normals, adding or subtraction is used for accumulation depending of floating-point number sign.
+Carry is propagated $acc_n$, $acc_{n+1}$ and up to $acc_4$.
+On this way, for large floating-point numbers,
+unnecessary large shifting across multiple 64-bit registers and accumulation of zeros to $acc_{n-1}$ and below.
+\par
+In Figure~\ref{fig:fix_acc_example} example of accumulating $13194139533312.0$ is shown. 
+This number have exponent field value set to 170 and its mantissa is 0 besides highest bit.
+Shift value is 169, local shift is 41 and global is 2.
+When mantissa with hidden 1 is shifted for 41, highest bit from mantissa will be highest bit in $tmp_0$
+and hidden 1 will be lowest bit in $tmp_1$.
+Then $tmp_0$ is added to $acc_2$ and $tmp_1$ to $acc_3$.
+Carry which occurs when $tmp_1$ and $acc_3$ are added propagate to $acc_4$.
+
+\def\regHeight{5mm}
+\begin{figure}[!t]
+	\centering
+    \begin{tikzpicture}
+
+		\node[anchor=west] at (-64mm, -0.5*\regHeight) {mantissa with hidden 1};
+		\draw (-22mm, 0mm) rectangle (-24mm, -\regHeight) node[pos=.5] {\color{red} 1};
+		\draw (-20mm, 0mm) rectangle (-22mm, -\regHeight) node[pos=.5] {\color{blue} 1};
+		\draw (0mm, 0mm) rectangle (-20mm, -\regHeight) node[pos=.5] {22x 0s};
+		\node[anchor=north] at (-23mm, -\regHeight) {23};
+		\node[anchor=north] at (0mm, -\regHeight) {0};
+
+		\node[anchor=west] at (-70mm, -2.5*\regHeight) {Local shifting};
+
+		\node[anchor=east] at (-64mm, -4.5*\regHeight) {$tmp_1$};
+		\draw (-2mm, -4*\regHeight) rectangle (-64mm, -5*\regHeight) node[pos=.5] {0s};
+		\draw (0mm, -4*\regHeight) rectangle (-2mm, -5*\regHeight) node[pos=.5] {\color{red} 1};
+		\node[anchor=north] at (-64mm, -5*\regHeight) {127};
+		\node[anchor=north] at (0mm, -5*\regHeight) {64};
+
+		\node[anchor=east] at (-64mm, -6.5*\regHeight) {$tmp_0$};
+		\draw (-62mm, -6*\regHeight) rectangle (-64mm, -7*\regHeight) node[pos=.5] {\color{blue} 1};
+		\draw (0mm, -6*\regHeight) rectangle (-62mm, -7*\regHeight) node[pos=.5] {0s};
+		\node[anchor=north] at (-64mm, -7*\regHeight) {63};
+		\node[anchor=north] at (0mm, -7*\regHeight) {0};
+				
+
+		\node[anchor=east] at (-64mm, -10.5*\regHeight) {$acc_4$};
+		\draw (0mm, -10*\regHeight) rectangle (-64mm, -11*\regHeight) node[pos=.5] {All 0s};
+		\node[anchor=north] at (-64mm, -11*\regHeight) {319};
+		\node[anchor=north] at (0mm, -11*\regHeight) {256};		
+		
+		\node[anchor=east] at (-64mm, -12.5*\regHeight) {$acc_3$};
+		\draw (0mm, -12*\regHeight) rectangle (-64mm, -13*\regHeight) node[pos=.5] {All 1s};
+		\node[anchor=north] at (-64mm, -13*\regHeight) {255};
+		\node[anchor=north] at (0mm, -13*\regHeight) {192};
+		
+		\node[anchor=east] at (-64mm, -14.5*\regHeight) {$acc_2$};
+		\draw (0mm, -14*\regHeight) rectangle (-64mm, -15*\regHeight) node[pos=.5] {All 0s};
+		\node[anchor=north] at (-64mm, -15*\regHeight) {191};
+		\node[anchor=north] at (0mm, -15*\regHeight) {128};
+		
+		\node[anchor=west] at (-70mm, -16.5*\regHeight) {Accumulation and carry propagation};
+
+		\node[anchor=east] at (-64mm, -18.5*\regHeight) {$acc_4$};
+		\draw (-2mm, -18*\regHeight) rectangle (-64mm, -19*\regHeight) node[pos=.5] {63x 0s};
+		\draw (0mm, -18*\regHeight) rectangle (-2mm, -19*\regHeight) node[pos=.5] {1};
+		\node[anchor=north] at (-64mm, -19*\regHeight) {319};
+		\node[anchor=north] at (0mm, -19*\regHeight) {256};
+
+		\node[anchor=east] at (-64mm, -20.5*\regHeight) {$acc_3$};
+		\draw (0mm, -20*\regHeight) rectangle (-64mm, -21*\regHeight) node[pos=.5] {All 0s};
+		\node[anchor=north] at (-64mm, -21*\regHeight) {255};
+		\node[anchor=north] at (0mm, -21*\regHeight) {192};
+		
+		\node[anchor=east] at (-64mm, -22.5*\regHeight) {$acc_2$};
+		\draw (-62mm, -22*\regHeight) rectangle (-64mm, -23*\regHeight) node[pos=.5] {\color{blue} 1};
+		\draw (0mm, -22*\regHeight) rectangle (-62mm, -23*\regHeight) node[pos=.5] {63x 0s};
+		\node[anchor=north] at (-64mm, -23*\regHeight) {191};
+		\node[anchor=north] at (0mm, -23*\regHeight) {128};		
+		
+	\end{tikzpicture}
+	
+	\caption{Example of accumulating floating-point number $13194139533312.0$}
+	\label{fig:fix_acc_example}
+\end{figure}
+
 \par
 Advantage of the solution shown in this paper in comparison to the method of Cascade Accumulator 
 is that it has up to 12 times less memory used.
