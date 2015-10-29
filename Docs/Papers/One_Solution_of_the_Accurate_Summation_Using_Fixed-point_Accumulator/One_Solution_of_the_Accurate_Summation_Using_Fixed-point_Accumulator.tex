@@ -329,14 +329,14 @@ Correction is added to term in next iteration cycle.
 If accumulator is large and terms are smaller, rounding error will be accumulated by correction variable, 
 and would not be lost in ordinary summing.
 Problem with Kahan is that correction will be lost if term in next iteration is relatively large to correction.
-Because that usually practice is to sort array of terms before summing, 
-which is inflexible because needs whole array of terms before summing.
+As usually the practice is to sort array of terms before summing, 
+which is inflexible and because it needs the whole array of terms before summing.
 \par
 The Kahan-Babuska-Klein summation algorithm \cite{KahanBabuskaKlein} tries to overcome shortcomings of Kahan's by recursive correction.
-This algorithm needs whole array of terms and also needs large amount of memory to save data between recursions.
+This algorithm needs whole array of terms and also needs a large amount of memory to save data between recursions.
 \par
 There are many others algorithms like \cite{DemmelAndHida} and \cite{DistillationAlgo} with comprehensive techniques 
-to solving problem of accurate summation.
+to solve problem of accurate summation.
 \par
 In \cite{ComparisonOfMethods} many algorithms are compared with multiple problems.
 The best of them is the method of Cascading Accumulators \cite{CascadingAccumulators}.
@@ -355,8 +355,8 @@ It has implemented typical methods for number class:
 arithmetic operators, assign operators, conversion operators, printing operators and support of manipulators.
 The inline methods are used to give compiler the opportunity to make a good optimization and to fit variable into registers.
 \par
-So far, only single precision fixed-point accumulator is implemented. 
-However, double precision could be implement with little additional effort.
+So far, only single precision fixed-point accumulator has been implemented. 
+However, double precision could be implemented with a little additional effort.
 \par
 The accumulator is 320-bit multiple precision integer, which is implemented as array of 5 64-bit integers.
 The compiler puts these numbers into registers, 
@@ -468,12 +468,12 @@ Every number larger than 276-bit in fixed-point accumulator is cannot be represe
 
 \par
 Figure~\ref{fig:fix_acc_algo} shows algorithm of direct accumulation of floating-points numbers to fixed-point accumulator.
-Floating-points numbers which are accumulated do not need to be promoted to whole fixed-point type 
+Floating-points numbers which are accumulated do not need to be promoted to the whole fixed-point type 
 and then to be added on fixed-point accumulator.
-Instead optimized approach is used.
-If floating-point number is de-normalized its mantissa without hidden 1 is accumulated to lowest part of accumulator $acc_0$, 
+Instead, an optimized approach is used.
+If a floating-point number is de-normalized its mantissa without hidden 1 is accumulated to the lowest part of accumulator $acc_0$, 
 without any shifting.
-Depending is it positive or negative floating-point number, mantissa is added or subtracted to $acc_0$, respectively.
+Depending is it is positive or negative floating-point number, mantissa is added or subtracted to $acc_0$, respectively.
 After that carry is propagated from $acc_0$ to $acc_4$.
 Normalized numbers have to be shifted before accumulation, depending on their exponent. 
 Shift value is calculated as exponent reduced by 1 and it is 8-bit wide.
@@ -483,18 +483,18 @@ lower $tmp_0$ and higher $tmp_1$.
 If, for example, local shift is below 42, all mantissa bits will stay in lower $tmp_0$, 
 otherwise some will be shifted to higher register $tmp_1$.
 After local shifting, global shift decides to which accumulator number aforementioned two temporal registers are accumulated.
-If global shift is $n$, $tmp_0$ is accumulated to $acc_n$
+If global shift is $n$, $tmp_0$ it is accumulated to $acc_n$
 and $tmp_1$ is accumulated to $acc_{n+1}$.
-Same as for de-normals, adding or subtraction is used for accumulation depending of floating-point number sign.
+The same as for de-normals, adding or subtraction is used for accumulation depending on floating-point number sign.
 Carry is propagated $acc_n$, $acc_{n+1}$ and up to $acc_4$.
-On this way, for large floating-point numbers,
+In this way, for large floating-point numbers,
 unnecessary large shifting across multiple 64-bit registers and accumulation of zeros to $acc_{n-1}$ and below.
 \par
-In Figure~\ref{fig:fix_acc_example} example of accumulating $13194139533312.0$ is shown. 
-This number have exponent field value set to 170 and its mantissa is 0 besides highest bit.
+In Figure~\ref{fig:fix_acc_example} the example of accumulating $13194139533312.0$ is shown. 
+This number has an exponent field value set to 170 and its mantissa is 0 besides the highest bit.
 Shift value is 169, local shift is 41 and global is 2.
-When mantissa with hidden 1 is shifted for 41, highest bit from mantissa will be highest bit in $tmp_0$
-and hidden 1 will be lowest bit in $tmp_1$.
+When mantissa with hidden 1 is shifted for 41, the highest bit from mantissa will be the highest bit in $tmp_0$
+and hidden 1 will be the lowest bit in $tmp_1$.
 Then $tmp_0$ is added to $acc_2$ and $tmp_1$ to $acc_3$.
 Carry which occurs when $tmp_1$ and $acc_3$ are added propagate to $acc_4$.
 
@@ -566,19 +566,19 @@ Carry which occurs when $tmp_1$ and $acc_3$ are added propagate to $acc_4$.
 \end{figure}
 
 \par
-Advantage of the solution shown in this paper in comparison to the method of Cascade Accumulator 
+The advantage of the solution shown in this paper in comparison to the method of Cascade Accumulator 
 is that it has up to 12 times less memory used.
 Fixed-point accumulator need 40 bytes, 
 comparing with 512 Cascade Accumulator implemented in the \cite{ComparisonOfMethods}.
 \par
-Source code of implementation described here could be found in \cite{FixAccGitHub}.
+The source code of implementation described here could be found in \cite{FixAccGitHub}.
 
 
 \section{Measurements}
 This paper presents three problems: 'Many smalls, one large',
 'One large, many smalls' and 'One large, many smalls, many tinies'.
 In the following, fixed-point algorithm is compared with Kahan's method
-which is classic algorithm and the method of Cascading Accumulators 
+which is a classic algorithm and the method of Cascading Accumulators 
 which presents the best solution due to its performance and precision 
 proved in paper \cite{CascadingAccumulators}.
 
@@ -587,20 +587,20 @@ proved in paper \cite{CascadingAccumulators}.
 are being summed with one large number. 
 Large number is 1.0 and smaller number is $2^{24} \epsilon$.
 In this paper $\epsilon$ is unit roundoff relative to 1.0 and 
-is $b^{-(p-1)}/2$ or concretely for single precision float point 
+is $b^{-(p-1)}/2$ or concretely for a single precision float point 
 $2^{-24}$ as defined by Demmel \cite{DemmelsEpsilon}.
-Small numbers are accumulated to one large number 1.0, the result would be 2.0.
+If small numbers were accumulated to one large number 1.0, the result would be 2.0.
 \par
 'One large, many smalls' is problem where one number 
 is being summed with many smaller numbers. 'One large, many smalls' 
-test consist of adding one number 1.0 and $2^{24}$ number $\epsilon$, 
+test consists of adding one number 1.0 and $2^{24}$ number $\epsilon$, 
 which is relatively small in compare with number 1.0.
 Тhe result would be 1.0 instead of 2.0 because of rounding errors.
 \par
-'One large, many smalls, many tinies' is problem where one 
+'One large, many smalls, many tinies' is a problem where one 
 number is being summed with $2^{24}$ small numbers and $2^{26}$
-tiny numbers. $2^{26}$ tiny numbers is equivalent to 4 small numbers.
-'One large, many smalls, many tinies' test consist of adding 
+tiny numbers. $2^{26}$ tiny numbers are equivalent to 4 small numbers.
+'One large, many smalls, many tinies' test consists of adding 
 one number 1.0 and $2^{24}$ number $\epsilon$ and $2^{26}$ number 
 $epsilon^2$.
 \par
@@ -660,14 +660,14 @@ For example, according to previous explanation of problem 'One large, many small
 it is expected to get a result $2.0 + 4\epsilon$, but the result is 2.0, 
 because $4\epsilon$ in tinies is lost.
 To solve this problem Kahan's algorithm need compensation for its compensation variable.
-This imply usage of recursive algorithms like Kahan-Babuska-Klein.
+This implies the usage of recursive algorithms like Kahan-Babuska-Klein.
 
 \par
 Both fixed-point accumulator and Cascading Accumulators method are without rounding errors.
-In case of Cascading Accumulators method it is possible to have overflow on particular accumulator.
-Particular implementation of Cascading Accumulators used in this work have approximately 27 bits before overflow.
-Fixed-point accumulator have approximately 41 bits before overflow.
-Making problem to test overflow robustness of Cascading Accumulators method and fixed-point accumulator solution will be future work.
+In the case of Cascading Accumulators method it is possible to have an overflow on particular accumulator.
+The particular implementation of Cascading Accumulators used in this work has approximately 27 bits before overflow.
+Fixed-point accumulator has approximately 41 bits before overflow.
+Making problem to test overflow robustness of Cascading Accumulators method and fixed-point accumulator solution will be the future work.
 \par
 The fixed-point accumulator is comparable with Cascading Accumulators in performances.
 Solution described here is less than two times slower than Cascading Accumulators.
@@ -675,11 +675,11 @@ Reason for that is that those 64
 double accumulators are in cache memory and fixed-point accumulator 
 has a bit more work that is a bit larger number of instructions 
 per summing than the Cascading Accumulators, so it comes to the same.
-Even with slightly worse performance, fixed-point accumulator need
-more than 12 times less memory in compare to Cascading Accumulators.
+Even with slightly worse performance, the fixed-point accumulator need
+more than 12 times less memory compared to Cascading Accumulators.
 \par
 Bad side of Cascading Accumulators is that it needs double precision floating-point accumulators.
-These accumulators are not always available. Due to this facts, implementation of 
+These accumulators are not always available. Due to these facts, the implementation of 
 Cascading Accumulators for double precision could not be possible.
 The fixed-point accumulator could be implemented on any architecture.
 \par
@@ -689,7 +689,7 @@ occupies much less logic and it is faster than the floating-point units.
 \section{Conclusion}
 In this paper it has been proven
 that the accurate summation using fixed-point accumulator 
-algorithm do not have rounding errors as well as the method of Cascading Accumulators,
+algorithm does not have rounding errors as well as the method of Cascading Accumulators,
 the best known algorithm.
 It is shown that solution presented in this paper has comparable performances as Cascading Accumulators method.
 \par
